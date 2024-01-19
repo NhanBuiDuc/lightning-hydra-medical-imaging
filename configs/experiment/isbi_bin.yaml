@@ -26,13 +26,5 @@ logger:
   aim:
     experiment: "isbi"
 paths:
-  # path to logging directory
-  log_dir: ${hydra:runtime.cwd}
-
-  # path to output directory, created dynamically by hydra
-  # path generation pattern is specified in `configs/hydra/default.yaml`
-  # use it to store all files generated during the run, like ckpts and metrics
-  output_dir: ${hydra:runtime.output_dir}
-
-  # path to working directory
-  work_dir: ${hydra:runtime.cwd}
+  # path to data directory
+  data_dir: ${paths.root_dir}../input/reporepo/lightning-hydra-template-main/data/
