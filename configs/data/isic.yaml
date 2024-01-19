@@ -1,0 +1,7 @@
+_target_: src.data.isic_datamodule.IsicDataModule
+data_dir: ${paths.data_dir}
+batch_size: 8 # Needs to be divisible by the number of devices (e.g., if in a distributed setup)
+train_val_test_split: [0.7, 0.15, 0.15]
+num_workers: 12
+pin_memory: False
+is_transform: True
