@@ -187,7 +187,7 @@ class ResnetModule(LightningModule):
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
-        f1 = self.val_f1_best.compute()
+        f1 = self.val_f1.compute()
         self.val_f1_best(f1)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch

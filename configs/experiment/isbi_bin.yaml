@@ -15,8 +15,8 @@ defaults:
 tags: ["isbi_bin"]
 
 trainer:
-  min_epochs: 10
-  max_epochs: 50
+  min_epochs: 1
+  max_epochs: 1
   gradient_clip_val: 0.5
 
 logger:
@@ -25,3 +25,14 @@ logger:
     group: "isbi"
   aim:
     experiment: "isbi"
+paths:
+  # path to logging directory
+  log_dir: ${hydra:runtime.cwd}
+
+  # path to output directory, created dynamically by hydra
+  # path generation pattern is specified in `configs/hydra/default.yaml`
+  # use it to store all files generated during the run, like ckpts and metrics
+  output_dir: ${hydra:runtime.output_dir}
+
+  # path to working directory
+  work_dir: ${hydra:runtime.cwd}
