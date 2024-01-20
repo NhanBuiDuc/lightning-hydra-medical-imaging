@@ -99,6 +99,8 @@ class ResnetModule(LightningModule):
         """Lightning hook that is called when training begins."""
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
+        # Empty the GPU memory cache
+        torch.cuda.empty_cache()
         self.val_loss.reset()
         self.val_recall.reset()
         self.val_precision.reset()
