@@ -119,8 +119,8 @@ class ResnetModule(LightningModule):
         """
         x, y = batch
         logits = self.forward(x)
+        loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)
-        loss = self.criterion(preds, y)
         return loss, preds, y
 
     def training_step(

@@ -25,7 +25,7 @@ logger:
     group: "isbi"
   aim:
     experiment: "isbi"
-paths:
-  # path to data directory
-  # data_dir: "../input/reporepo/lightning-hydra-template-main/data/"
-  data_dir: ${hydra:runtime.cwd}/input/reporepo/lightning-hydra-template-main/data/
+# paths:
+#   # path to data directory
+#   # data_dir: "../input/reporepo/lightning-hydra-template-main/data/"
+#   data_dir: ${hydra:runtime.cwd}/input/reporepo/lightning-hydra-template-main/data/
