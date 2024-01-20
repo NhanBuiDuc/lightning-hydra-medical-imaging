@@ -139,7 +139,7 @@ class ResnetModule(LightningModule):
         """
         if batch is not None:
             x, y = batch
-            y = y.squeeze(0)
+            y = y.unsqueeze(-1)
             logits = self.forward(x)
             loss = self.criterion(logits, y)
             preds = torch.argmax(logits, dim=1)
