@@ -293,9 +293,19 @@ class IsbiDataSet(Dataset):
                     'RGB')  # Adjust as needed
 
             except FileNotFoundError:
-                # Handle the case where both .jpg and .png files are not found
-                print(f"Error: File not found for index {index}")
-                # You might want to return a placeholder image or raise an exception as needed
+                try:
+                    # If the file with .jpg extension is not found, try to open the image with .png extension
+                    image_path = os.path.join(
+                        self.data_dir, "ISBI_2024/images/", self.data[index] + ".jpeg")
+                    # Replacing backslashes with forward slashes
+                    image_path = image_path.replace("\\", "/")
+                    image = Image.open(image_path).convert(
+                        'RGB')  # Adjust as needed
+
+                except FileNotFoundError:
+                    # Handle the case where both .jpg and .png files are not found
+                    print(f"Error: File not found for index {index}")
+                    # You might want to return a placeholder image or raise an exception as needed
 
         # Apply transformations if specified
         if image is not None:
