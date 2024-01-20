@@ -15,8 +15,8 @@ defaults:
 tags: ["isbi_bin"]
 
 trainer:
-  min_epochs: 1
-  max_epochs: 1
+  min_epochs: 10
+  max_epochs: 50
   gradient_clip_val: 0.5
 
 logger:
