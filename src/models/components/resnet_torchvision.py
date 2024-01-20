@@ -21,11 +21,11 @@ class ResNet(nn.Module):
         # Check if the specified model_type is in the switch case
         if version not in switch:
             self.resnet = switch["resnet18"](
-                weights=None, progress=True, num_classes=num_classes)
+                weights=None, progress=True, num_classes=num_classes-1)
         else:
             # Initialize the ResNet model without pre-training and with progress
             self.resnet = switch[version](
-                weights=None, progress=True, num_classes=num_classes)
+                weights=None, progress=True, num_classes=num_classes-1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.resnet(x)
