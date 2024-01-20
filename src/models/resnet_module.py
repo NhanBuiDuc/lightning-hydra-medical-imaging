@@ -100,6 +100,8 @@ class ResnetModule(LightningModule):
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
         self.val_loss.reset()
+        self.val_recall.reset()
+        self.val_precision.reset()
         self.val_acc.reset()
         self.val_f1_best.reset()
 
@@ -117,8 +119,8 @@ class ResnetModule(LightningModule):
         """
         x, y = batch
         logits = self.forward(x)
-        loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)
+        loss = self.criterion(preds, y)
         return loss, preds, y
 
     def training_step(
