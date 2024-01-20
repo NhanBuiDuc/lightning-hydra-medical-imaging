@@ -2,8 +2,10 @@ from typing import Any, Dict, Tuple
 
 import torch
 from lightning import LightningModule
-from torchmetrics import MaxMetric, MeanMetric, F1Score, Precision, Recall
+from torchmetrics import MaxMetric, MeanMetric, F1Score, Precision, Recall, ConfusionMatrix
 from torchmetrics.classification.accuracy import Accuracy
+from torchvision.ops import focal_loss
+import matplotlib.pyplot as plt
 
 
 class ResnetModule(LightningModule):
@@ -45,6 +47,7 @@ class ResnetModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler,
         compile: bool,
+        criterion: str,
     ) -> None:
         """Initialize a `MNISTLitModule`.
 
@@ -62,28 +65,43 @@ class ResnetModule(LightningModule):
             self.task = "multiclass"
         else:
             self.task = "binary"
-
         # loss function
-        self.criterion = torch.nn.CrossEntropyLoss()
-
+        if criterion == "Entropy":
+            if self.net.num_classes > 2:
+                self.criterion = torch.nn.CrossEntropyLoss()
+            self.criterion = torch.nn.BCELoss()
+        elif criterion == "Focal":
+            self.criterion = focal_loss()
         # metric objects for calculating and averaging accuracy across batches
-        self.train_acc = Accuracy(task=self.task)
-        self.val_acc = Accuracy(task=self.task)
+        self.train_acc = Accuracy(
+            task=self.task, num_classes=self.net.num_classes)
+        self.val_acc = Accuracy(
+            task=self.task, num_classes=self.net.num_classes)
 
-        self.train_f1 = F1Score(task=self.task)
-        self.val_f1 = F1Score(task=self.task)
+        self.train_f1 = F1Score(
+            task=self.task, num_classes=self.net.num_classes)
+        self.val_f1 = F1Score(task=self.task, num_classes=self.net.num_classes)
 
-        self.train_recall = Recall(task=self.task)
-        self.val_recall = Recall(task=self.task)
+        self.train_recall = Recall(
+            task=self.task, num_classes=self.net.num_classes)
+        self.val_recall = Recall(
+            task=self.task, num_classes=self.net.num_classes)
 
-        self.train_precision = Precision(task=self.task)
-        self.val_precision = Precision(task=self.task)
+        self.train_precision = Precision(
+            task=self.task, num_classes=self.net.num_classes)
+        self.val_precision = Precision(
+            task=self.task, num_classes=self.net.num_classes)
+
+        self.train_confusion_matrix = ConfusionMatrix(
+            task=self.task, num_classes=self.net.num_classes)
+        self.val_confusion_matrix = ConfusionMatrix(
+            task=self.task, num_classes=self.net.num_classes)
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
 
-        # for tracking best so far validation accuracy
+        # for tracking best so far validation F1
         # self.val_acc_best = MaxMetric()
         self.val_f1_best = MaxMetric()
 
@@ -146,17 +164,21 @@ class ResnetModule(LightningModule):
         self.train_f1(preds, targets)
         self.train_recall(preds, targets)
         self.train_precision(preds, targets)
+        self.train_confusion_matrix(preds, targets)
 
-        self.log("train/loss", self.train_loss,
+        self.log("train/loss", self.train_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/acc", self.train_acc, on_step=False,
+        self.log("train/acc", self.train_acc.compute(), on_step=False,
                  on_epoch=True, prog_bar=True)
-        self.log("train/f1", self.train_f1,
+        self.log("train/f1", self.train_f1.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/recall", self.train_recall,
+        self.log("train/recall", self.train_recall.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/precision", self.train_precision,
+        self.log("train/precision", self.train_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/confusion_matrix", self.train_confusion_matrix.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True)
+        self.train_confusion_matrix.plot()
         # return loss or backpropagation will fail
         return loss
 
@@ -179,23 +201,27 @@ class ResnetModule(LightningModule):
         self.val_f1(preds, targets)
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
+        self.val_confusion_matrix(preds, targets)
 
-        self.log("val/loss", self.val_loss,
+        self.log("val/loss", self.val_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc, on_step=False,
+        self.log("val/acc", self.val_acc.compute(), on_step=False,
                  on_epoch=True, prog_bar=True)
-        self.log("val/f1", self.val_f1,
+        self.log("val/f1", self.val_f1.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/recall", self.val_recall,
+        self.log("val/recall", self.val_recall.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/precision", self.val_precision,
+        self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/confusion_matrix", self.val_confusion_matrix.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True)
+        self.train_confusion_matrix.plot()
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
         f1 = self.val_f1.compute()
-        self.val_f1_best(f1)  # update best so far val acc
+        self.val_f1_best.update(f1)  # update best so far val acc
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         self.log("val/f1_best", self.val_f1_best.compute(),
@@ -217,15 +243,15 @@ class ResnetModule(LightningModule):
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
 
-        self.log("val/loss", self.val_loss,
+        self.log("val/loss", self.val_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc, on_step=False,
+        self.log("val/acc", self.val_acc.compute(), on_step=False,
                  on_epoch=True, prog_bar=True)
-        self.log("val/f1", self.val_f1,
+        self.log("val/f1", self.val_f1.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/recall", self.val_recall,
+        self.log("val/recall", self.val_recall.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/precision", self.val_precision,
+        self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self) -> None:

@@ -17,5 +17,7 @@ net:
   num_classes: 2
   version: "resnet50"
 
+criterion: "Entropy"
+
 # compile model for faster training with pytorch 2.0
 compile: false
