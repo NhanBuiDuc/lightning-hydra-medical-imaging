@@ -28,4 +28,4 @@ logger:
 paths:
   # path to data directory
   # data_dir: "../input/reporepo/lightning-hydra-template-main/data/"
-  data_dir: ${oc.env:PROJECT_ROOT}
+  data_dir: ${hydra:runtime.cwd}/input/reporepo/lightning-hydra-template-main/data/
