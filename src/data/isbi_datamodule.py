@@ -68,7 +68,7 @@ class IsbiDataModule(LightningDataModule):
         self.train_image_path = os.path.join(
             self.data_dir, "ISBI-2024/images/")
         self.train_gt_path = os.path.join(
-            self.data_dir, "ISBI_2024", "train_labels.csv")
+            self.data_dir, "ISBI_2024", "JustRAIGS_Train_labels.csv")
         self.train_gt_path = self.train_gt_path.replace("\\", "/")
 
     @property
@@ -85,8 +85,8 @@ class IsbiDataModule(LightningDataModule):
         Do not use it to assign state (self.x = y).
         """
         # Load the CSV file into a pandas DataFrame
-        self.train_gt_pdf = pd.read_csv(self.train_gt_path)
-        self.train_image_name = self.train_gt_pdf["challenge_id"]
+        self.train_gt_pdf = pd.read_csv(self.train_gt_path, delimiter=';')
+        self.train_image_name = self.train_gt_pdf["Eye ID"]
         self.train_label_list = self.train_gt_pdf.iloc[:, 1:].apply(
             lambda row: {col.lower(): row[col] for col in self.train_gt_pdf.columns[1:]}, axis=1).tolist()
 
@@ -106,8 +106,8 @@ class IsbiDataModule(LightningDataModule):
         """
         if not self.data_train and not self.data_val:
 
-            input_data = self.train_gt_pdf['challenge_id']
-            labels = self.train_gt_pdf['class']
+            input_data = self.train_gt_pdf['Eye ID']
+            labels = self.train_gt_pdf['Final Label']
             # choose fold to train on
             kf = KFold(n_splits=len(self.kfold_seed_list),
                        shuffle=True, random_state=self.kfold_seed)
@@ -200,8 +200,7 @@ class IsbiDataModule(LightningDataModule):
         class_distribution = {item: 0 for item in self.class_name}
 
         for item in self.train_label_list:
-            for _, name in item.items():
-                class_distribution[name] += 1
+            class_distribution[item['final label']] += 1
 
         return class_distribution
 
