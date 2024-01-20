@@ -273,11 +273,29 @@ class IsbiDataSet(Dataset):
 
     def __getitem__(self, index):
         # Load image using self.df['image'][index], assuming 'image' is the column containing image paths
-        image_path = os.path.join(
-            self.data_dir, "ISBI_2024/images/",  self.data[index] + ".jpg")
-        # Replacing backslashes with forward slashes
-        image_path = image_path.replace("\\", "/")
-        image = Image.open(image_path).convert('RGB')  # Adjust as needed
+        try:
+            # Attempt to open the image with .jpg extension
+            image_path = os.path.join(
+                self.data_dir, "ISBI_2024/images/", self.data[index] + ".jpg")
+            # Replacing backslashes with forward slashes
+            image_path = image_path.replace("\\", "/")
+            image = Image.open(image_path).convert('RGB')  # Adjust as needed
+
+        except FileNotFoundError:
+            try:
+                # If the file with .jpg extension is not found, try to open the image with .png extension
+                image_path = os.path.join(
+                    self.data_dir, "ISBI_2024/images/", self.data[index] + ".png")
+                # Replacing backslashes with forward slashes
+                image_path = image_path.replace("\\", "/")
+                image = Image.open(image_path).convert(
+                    'RGB')  # Adjust as needed
+
+            except FileNotFoundError:
+                # Handle the case where both .jpg and .png files are not found
+                print(f"Error: File not found for index {index}")
+                # You might want to return a placeholder image or raise an exception as needed
+
         # Apply transformations if specified
         if self.is_transform:
             image = self.transform(image)
