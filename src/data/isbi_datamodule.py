@@ -273,6 +273,7 @@ class IsbiDataSet(Dataset):
 
     def __getitem__(self, index):
         # Load image using self.df['image'][index], assuming 'image' is the column containing image paths
+        image = None
         try:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
@@ -297,17 +298,20 @@ class IsbiDataSet(Dataset):
                 # You might want to return a placeholder image or raise an exception as needed
 
         # Apply transformations if specified
-        if self.is_transform:
-            image = self.transform(image)
+        if image is not None:
+            if self.is_transform:
+                image = self.transform(image)
 
-        # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
-        label = self.label[index]
-        gt = self.class_name.index(label)
-        gt = torch.tensor(gt)
-        # Create a one-hot encoded tensor
-        # one_hot_encoded = torch.zeros(len(self.class_name))
-        # one_hot_encoded[gt] = 1
-        return image, gt
+            # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
+            label = self.label[index]
+            gt = self.class_name.index(label)
+            gt = torch.tensor(gt)
+            # Create a one-hot encoded tensor
+            # one_hot_encoded = torch.zeros(len(self.class_name))
+            # one_hot_encoded[gt] = 1
+            return image, gt
+        else:
+            return None
 
 
 if __name__ == "__main__":
