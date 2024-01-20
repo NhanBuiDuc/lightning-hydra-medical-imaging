@@ -27,4 +27,4 @@ logger:
     experiment: "isbi"
 paths:
   # path to data directory
-  data_dir: ${paths.root_dir}../input/reporepo/lightning-hydra-template-main/data/
+  data_dir: $../input/reporepo/lightning-hydra-template-main/data/
