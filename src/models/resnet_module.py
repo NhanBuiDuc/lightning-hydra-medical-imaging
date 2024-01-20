@@ -119,11 +119,14 @@ class ResnetModule(LightningModule):
             - A tensor of predictions.
             - A tensor of target labels.
         """
-        x, y = batch
-        logits = self.forward(x)
-        loss = self.criterion(logits, y)
-        preds = torch.argmax(logits, dim=1)
-        return loss, preds, y
+        if batch is not None:
+            x, y = batch
+            logits = self.forward(x)
+            loss = self.criterion(logits, y)
+            preds = torch.argmax(logits, dim=1)
+            return loss, preds, y
+        else:
+            return None, None, None
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int
