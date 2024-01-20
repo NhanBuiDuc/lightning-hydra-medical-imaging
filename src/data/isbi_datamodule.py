@@ -309,7 +309,6 @@ class IsbiDataSet(Dataset):
 
         # Apply transformations if specified
         if image is not None:
-            image = transforms.ToTensor(dtype=torch.float)(image)
             if self.is_transform:
                 image = self.transform(image)
 
