@@ -16,7 +16,7 @@ tags: ["isbi_bin"]
 
 trainer:
   min_epochs: 10
-  max_epochs: 50
+  max_epochs: 20
   gradient_clip_val: 0.5
 data:
   num_workers: 13
