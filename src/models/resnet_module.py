@@ -238,7 +238,7 @@ class ResnetModule(LightningModule):
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
         f1 = self.val_f1.compute()
-        self.val_f1_best.update(f1)  # update best so far val acc
+        self.val_f1_best(f1)  # update best so far val acc
 
         self.val_loss.reset()
         self.val_acc.reset()
