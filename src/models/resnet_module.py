@@ -8,6 +8,7 @@ from torchvision.ops.focal_loss import sigmoid_focal_loss
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import pandas as pd
+from components import focal_loss
 
 
 class ResnetModule(LightningModule):
@@ -73,7 +74,7 @@ class ResnetModule(LightningModule):
                 self.criterion = torch.nn.CrossEntropyLoss()
             self.criterion = torch.nn.BCELoss()
         elif criterion == "focal":
-            self.criterion = sigmoid_focal_loss
+            self.criterion = focal_loss()
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(
             task=self.task, num_classes=self.net.num_classes)
