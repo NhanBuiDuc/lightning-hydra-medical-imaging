@@ -259,9 +259,8 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
-
-        # self.log("val/f1_best", self.val_f1_best.compute(),
-        #          sync_dist=True, prog_bar=True)
+        self.log("val/f1_best", self.val_f1_best.compute(),
+                 sync_dist=True, prog_bar=True)
         # confusion_matrix_computed = self.val_confusion_matrix.compute(
         # ).detach().cpu().numpy().astype(int)
         # self.loggers[0].log_metrics(
