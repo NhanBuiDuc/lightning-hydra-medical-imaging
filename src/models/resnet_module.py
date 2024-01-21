@@ -195,12 +195,12 @@ class ResnetModule(LightningModule):
     def on_train_epoch_end(self) -> None:
         "Lightning hook that is called when a training epoch ends."
 
-        # self.train_loss.reset()
-        # self.train_acc.reset()
-        # self.train_f1.reset()
-        # self.train_recall.reset()
-        # self.train_precision.reset()
-        # self.train_confusion_matrix.reset()
+        self.train_loss.reset()
+        self.train_acc.reset()
+        self.train_f1.reset()
+        self.train_recall.reset()
+        self.train_precision.reset()
+        self.train_confusion_matrix.reset()
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single validation step on a batch of data from the validation set.
@@ -212,12 +212,12 @@ class ResnetModule(LightningModule):
         loss, preds, targets = self.model_step(batch)
 
         # update and log metrics
-        self.val_loss.update(loss)
-        self.val_acc.update(preds, targets)
-        self.val_f1.update(preds, targets)
-        self.val_recall.update(preds, targets)
-        self.val_precision.update(preds, targets)
-        self.val_confusion_matrix.update(preds, targets)
+        self.val_loss(loss)
+        self.val_acc(preds, targets)
+        self.val_f1(preds, targets)
+        self.val_recall(preds, targets)
+        self.val_precision(preds, targets)
+        self.val_confusion_matrix(preds, targets)
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
