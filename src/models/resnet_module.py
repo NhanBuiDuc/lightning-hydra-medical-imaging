@@ -247,19 +247,19 @@ class ResnetModule(LightningModule):
         self.val_precision.reset()
         self.val_confusion_matrix.reset()
 
-        self.log("val/loss", self.val_loss.compute(),
+        self.log("val/loss", self.val_loss,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/acc", self.val_acc.compute(), on_step=False,
+        self.log("val/acc", self.val_acc, on_step=False,
                  on_epoch=True, prog_bar=True, logger=True)
         self.log("val/f1", f1,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/recall", self.val_recall.compute(),
+        self.log("val/recall", self.val_recall,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/precision", self.val_precision.compute(),
+        self.log("val/precision", self.val_precision,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
-        self.log("val/f1_best", self.val_f1_best.compute(),
+        self.log("val/f1_best", self.val_f1_best,
                  sync_dist=True, prog_bar=True)
         # confusion_matrix_computed = self.val_confusion_matrix.compute(
         # ).detach().cpu().numpy().astype(int)
