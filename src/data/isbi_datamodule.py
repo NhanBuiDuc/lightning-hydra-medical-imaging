@@ -318,7 +318,7 @@ class IsbiDataSet(Dataset):
             gt = torch.tensor(gt, dtype=torch.float32)
             # Create a one-hot encoded tensor
             one_hot_encoded = torch.zeros(
-                len(self.class_name, dtype=torch.float32))
+                len(self.class_name), dtype=torch.float32)
             one_hot_encoded[gt] = torch.float32(1)
             return image, one_hot_encoded
         else:
