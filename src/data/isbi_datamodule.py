@@ -86,7 +86,7 @@ class IsbiDataModule(LightningDataModule):
         """
         # Load the CSV file into a pandas DataFrame
         self.train_gt_pdf = pd.read_csv(self.train_gt_path, delimiter=';')
-        self.train_gt_pdf = self.train_gt_pdf[:]
+        self.train_gt_pdf = self.train_gt_pdf[:100]
         self.train_image_name = self.train_gt_pdf["Eye ID"]
         self.train_label_list = self.train_gt_pdf.iloc[:, 1:].apply(
             lambda row: {col.lower(): row[col] for col in self.train_gt_pdf.columns[1:]}, axis=1).tolist()

@@ -47,7 +47,7 @@ hydra:
     params:
       model.optimizer.lr: interval(0.0001, 0.1)
       model.criterion: choice("entropy", "focal")
-      data.batch_size: choice(32, 64)
+      data.batch_size: choice(32)
       data.image_size: choice(448, 512)
       data.kfold_seed: choice(111, 222, 333, 444, 555)
       # model.net.version: choice("resnet18", "resnet34", "resnet50", "resnet101", "resnet152")
