@@ -186,15 +186,8 @@ class ResnetModule(LightningModule):
 
         confusion_matrix_computed = self.train_confusion_matrix.compute(
         ).detach().cpu().numpy().astype(int)
-        df_cm = pd.DataFrame(confusion_matrix_computed)
-        plt.figure(figsize=(10, 7))
-        fig_ = sns.heatmap(df_cm, annot=True, cmap='Spectral').get_figure()
-        plt.close(fig_)
-        self.loggers[0].experiment.add_figure(
-            "Train confusion matrix", fig_, self.current_epoch)
-
-        # self.log("train/confusion_matrix", self.train_confusion_matrix.confmat,
-        #          on_step=False, on_epoch=True, prog_bar=True)
+        self.loggers[0].log_metrics(
+            {"train/confusion_matrix": confusion_matrix_computed})
 
         # return loss or backpropagation will fail
         return loss
@@ -233,12 +226,10 @@ class ResnetModule(LightningModule):
 
         confusion_matrix_computed = self.val_confusion_matrix.compute(
         ).detach().cpu().numpy().astype(int)
-        df_cm = pd.DataFrame(confusion_matrix_computed)
-        plt.figure(figsize=(10, 7))
-        fig_ = sns.heatmap(df_cm, annot=True, cmap='Spectral').get_figure()
-        plt.close(fig_)
-        self.loggers[0].experiment.add_figure(
-            "Train confusion matrix", fig_, self.current_epoch)
+        confusion_matrix_computed = self.val_confusion_matrix.compute(
+        ).detach().cpu().numpy().astype(int)
+        self.loggers[0].log_metrics(
+            {"val/confusion_matrix": confusion_matrix_computed})
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
