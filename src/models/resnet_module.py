@@ -225,13 +225,6 @@ class ResnetModule(LightningModule):
         f1 = self.val_f1.compute()
         self.val_f1_best(f1)  # update best so far val acc
 
-        self.val_loss.reset()
-        self.val_acc.reset()
-        self.val_f1.reset()
-        self.val_recall.reset()
-        self.val_precision.reset()
-        self.val_confusion_matrix.reset()
-
         self.log("val/loss", self.val_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/acc", self.val_acc.compute(), on_step=False,
