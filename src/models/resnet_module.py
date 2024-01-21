@@ -181,9 +181,9 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/precision", self.train_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/confusion_matrix", self.train_confusion_matrix,
+        self.log("train/confusion_matrix", self.train_confusion_matrix.confmat,
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.train_confusion_matrix.plot()
+
         # return loss or backpropagation will fail
         return loss
 
@@ -218,9 +218,8 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/confusion_matrix", self.val_confusion_matrix,
+        self.log("val/confusion_matrix", self.val_confusion_matrix.confmat,
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.train_confusion_matrix.plot()
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
