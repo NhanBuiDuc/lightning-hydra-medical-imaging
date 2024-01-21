@@ -8,7 +8,7 @@ from torchvision.ops.focal_loss import sigmoid_focal_loss
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import pandas as pd
-from components import focal_loss
+from .components import focal_loss
 
 
 class ResnetModule(LightningModule):
