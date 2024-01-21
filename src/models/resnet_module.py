@@ -7,6 +7,8 @@ from torchmetrics.classification.accuracy import Accuracy
 from torchvision.ops.focal_loss import sigmoid_focal_loss
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
+import pandas as pd
+import seaborn as sns
 
 
 class ResnetModule(LightningModule):
@@ -181,8 +183,18 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/precision", self.train_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/confusion_matrix", self.train_confusion_matrix.confmat,
-                 on_step=False, on_epoch=True, prog_bar=True)
+
+        confusion_matrix_computed = self.train_confusion_matrix.compute(
+        ).detach().cpu().numpy().astype(int)
+        df_cm = pd.DataFrame(confusion_matrix_computed)
+        plt.figure(figsize=(10, 7))
+        fig_ = sns.heatmap(df_cm, annot=True, cmap='Spectral').get_figure()
+        plt.close(fig_)
+        self.loggers[0].experiment.add_figure(
+            "Train confusion matrix", fig_, self.current_epoch)
+
+        # self.log("train/confusion_matrix", self.train_confusion_matrix.confmat,
+        #          on_step=False, on_epoch=True, prog_bar=True)
 
         # return loss or backpropagation will fail
         return loss
@@ -218,8 +230,15 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/confusion_matrix", self.val_confusion_matrix.confmat,
-                 on_step=False, on_epoch=True, prog_bar=True)
+
+        confusion_matrix_computed = self.val_confusion_matrix.compute(
+        ).detach().cpu().numpy().astype(int)
+        df_cm = pd.DataFrame(confusion_matrix_computed)
+        plt.figure(figsize=(10, 7))
+        fig_ = sns.heatmap(df_cm, annot=True, cmap='Spectral').get_figure()
+        plt.close(fig_)
+        self.loggers[0].experiment.add_figure(
+            "Train confusion matrix", fig_, self.current_epoch)
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
