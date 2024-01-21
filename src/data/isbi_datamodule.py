@@ -315,7 +315,7 @@ class IsbiDataSet(Dataset):
             # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
             label = self.label[index]
             gt = self.class_name.index(label)
-            gt = torch.tensor(gt)
+            gt = torch.tensor(gt, dtype=torch.float32)
             # Create a one-hot encoded tensor
             # one_hot_encoded = torch.zeros(len(self.class_name))
             # one_hot_encoded[gt] = 1
