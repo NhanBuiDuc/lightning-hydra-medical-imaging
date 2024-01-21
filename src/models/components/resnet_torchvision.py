@@ -27,7 +27,7 @@ class ResNet(nn.Module):
             self.resnet = switch[version](
                 weights=None, progress=True, num_classes=num_classes)
 
-        self.sigmoid = nn.Sigmoid(dim=1)
+        self.sigmoid = nn.Sigmoid()
         self.soft_max = nn.Softmax(dim=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
