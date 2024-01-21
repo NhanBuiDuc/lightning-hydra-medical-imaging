@@ -6,6 +6,7 @@ from torchmetrics import MaxMetric, MeanMetric, F1Score, Precision, Recall, Conf
 from torchmetrics.classification.accuracy import Accuracy
 from torchvision.ops.focal_loss import sigmoid_focal_loss
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
 
 
 class ResnetModule(LightningModule):
@@ -142,7 +143,11 @@ class ResnetModule(LightningModule):
             logits = self.forward(x)
             loss = self.criterion(logits, y)
             preds = torch.argmax(logits, dim=1)
-            return loss, preds, y
+            preds_one_hot = F.one_hot(preds, num_classes=self.num_classes)
+
+            ground_truth = torch.argmax(y, dim=1)
+            y = F.one_hot(ground_truth, num_classes=self.num_classes)
+            return loss, preds_one_hot, y
         else:
             return None, None, None
 
