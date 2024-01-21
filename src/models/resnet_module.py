@@ -195,15 +195,15 @@ class ResnetModule(LightningModule):
     def on_train_epoch_end(self) -> None:
         "Lightning hook that is called when a training epoch ends."
 
-        self.log("train/loss", self.train_loss.compute(),
+        self.log("train/loss", self.train_loss,
                  on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        self.log("train/acc", self.train_acc.compute(), on_step=False,
-                 on_epoch=True, prog_bar=True,  logger=True)
-        self.log("train/f1", self.train_f1.compute(),
+        self.log("train/acc", self.train_acc, on_step=False,
+                 on_epoch=False, prog_bar=True,  logger=True)
+        self.log("train/f1", self.train_f1,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("train/recall", self.train_recall.compute(),
+        self.log("train/recall", self.train_recall,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("train/precision", self.train_precision.compute(),
+        self.log("train/precision", self.train_precision,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
         self.train_loss.reset()
@@ -247,15 +247,15 @@ class ResnetModule(LightningModule):
         self.val_precision.reset()
         self.val_confusion_matrix.reset()
 
-        self.log("val/loss", self.val_loss.compute(),
+        self.log("val/loss", self.val_loss,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/acc", self.val_acc.compute(), on_step=False,
+        self.log("val/acc", self.val_acc, on_step=False,
                  on_epoch=True, prog_bar=True, logger=True)
         self.log("val/f1", self.val_f1,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/recall", self.val_recall.compute(),
+        self.log("val/recall", self.val_recall,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/precision", self.val_precision.compute(),
+        self.log("val/precision", self.val_precision,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
