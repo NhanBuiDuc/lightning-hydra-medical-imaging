@@ -20,12 +20,9 @@ trainer:
   gradient_clip_val: 0.5
 data:
   num_workers: 13
-logger:
-  wandb:
-    tags: ${tags}
-    group: "isbi"
-  aim:
-    experiment: "isbi"
+# logger:
+#   aim:
+#     experiment: "isbi"
 # paths:
 #   # path to data directory
 #   # data_dir: "../input/reporepo/lightning-hydra-template-main/data/"
