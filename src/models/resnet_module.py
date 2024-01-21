@@ -127,6 +127,7 @@ class ResnetModule(LightningModule):
         self.val_precision.reset()
         self.val_acc.reset()
         self.val_f1_best.reset()
+        self.val_confusion_matrix.reset()
 
     def model_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor]
@@ -226,8 +227,7 @@ class ResnetModule(LightningModule):
 
         confusion_matrix_computed = self.val_confusion_matrix.compute(
         ).detach().cpu().numpy().astype(int)
-        confusion_matrix_computed = self.val_confusion_matrix.compute(
-        ).detach().cpu().numpy().astype(int)
+
         self.loggers[0].log_metrics(
             {"val/confusion_matrix": confusion_matrix_computed})
 

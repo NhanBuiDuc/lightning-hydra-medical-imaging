@@ -20,9 +20,6 @@ trainer:
   gradient_clip_val: 0.5
 data:
   num_workers: 13
-logger:
-  csv:
-    experiment: "isbi"
 # paths:
 #   # path to data directory
 #   # data_dir: "../input/reporepo/lightning-hydra-template-main/data/"
