@@ -172,12 +172,12 @@ class ResnetModule(LightningModule):
         loss, preds, targets = self.model_step(batch)
 
         # update and log metrics
-        self.train_loss.update(loss)
-        self.train_acc.update(preds, targets)
-        self.train_f1.update(preds, targets)
-        self.train_recall.update(preds, targets)
-        self.train_precision.update(preds, targets)
-        self.train_confusion_matrix.update(preds, targets)
+        self.train_loss(loss)
+        self.train_acc(preds, targets)
+        self.train_f1(preds, targets)
+        self.train_recall(preds, targets)
+        self.train_precision(preds, targets)
+        self.train_confusion_matrix(preds, targets)
 
         self.log("train/loss", self.train_loss,
                  on_step=True, on_epoch=False, prog_bar=True, logger=True)
@@ -195,27 +195,12 @@ class ResnetModule(LightningModule):
     def on_train_epoch_end(self) -> None:
         "Lightning hook that is called when a training epoch ends."
 
-        self.log("train/loss", self.train_loss,
-                 on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        self.log("train/acc", self.train_acc, on_step=False,
-                 on_epoch=True, prog_bar=True,  logger=True)
-        self.log("train/f1", self.train_f1,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("train/recall", self.train_recall,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("train/precision", self.train_precision,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-
         self.train_loss.reset()
         self.train_acc.reset()
         self.train_f1.reset()
         self.train_recall.reset()
         self.train_precision.reset()
         self.train_confusion_matrix.reset()
-        # confusion_matrix_computed = self.train_confusion_matrix.compute(
-        # ).detach().cpu().numpy().astype(int)
-        # self.loggers[0].log_metrics(
-        #     {"train/loss": self.train_loss.compute(), "train/acc": self.train_acc.compute(), "train/f1": self.train_f1.compute(), "train/recall": self.train_recall.compute(), "train/precision": self.train_precision.compute(), "train/confusion_matrix": confusion_matrix_computed})
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single validation step on a batch of data from the validation set.
@@ -261,10 +246,6 @@ class ResnetModule(LightningModule):
         # otherwise metric would be reset by lightning after each epoch
         self.log("val/f1_best", self.val_f1_best,
                  sync_dist=True, prog_bar=True)
-        # confusion_matrix_computed = self.val_confusion_matrix.compute(
-        # ).detach().cpu().numpy().astype(int)
-        # self.loggers[0].log_metrics(
-        #     {"val/loss": self.val_loss.compute(), "val/acc": self.val_acc.compute(), "val/f1": self.val_f1.compute(), "val/recall": self.val_recall.compute(), "val/precision": self.val_precision.compute(), "val/confusion_matrix": confusion_matrix_computed, "val/f1_best": self.val_f1_best.compute()})
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
