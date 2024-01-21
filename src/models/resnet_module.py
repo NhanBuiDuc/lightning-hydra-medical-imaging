@@ -180,20 +180,32 @@ class ResnetModule(LightningModule):
         self.train_confusion_matrix(preds, targets)
 
         self.log("train/loss", self.train_loss,
-                 on_step=True, on_epoch=True, prog_bar=True, logger=True)
+                 on_step=True, on_epoch=False, prog_bar=True, logger=True)
         self.log("train/acc", self.train_acc, on_step=True,
-                 on_epoch=True, prog_bar=True,  logger=True)
+                 on_epoch=False, prog_bar=True,  logger=True)
         self.log("train/f1", self.train_f1,
-                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
+                 on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         self.log("train/recall", self.train_recall,
-                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
+                 on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         self.log("train/precision", self.train_precision,
-                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
+                 on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         # return loss or backpropagation will fail
         return loss
 
     def on_train_epoch_end(self) -> None:
         "Lightning hook that is called when a training epoch ends."
+
+        self.log("train/loss", self.train_loss.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train/acc", self.train_acc.compute(), on_step=False,
+                 on_epoch=True, prog_bar=True,  logger=True)
+        self.log("train/f1", self.train_f1.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("train/recall", self.train_recall.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("train/precision", self.train_precision.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
         self.train_loss.reset()
         self.train_acc.reset()
         self.train_f1.reset()
@@ -222,17 +234,6 @@ class ResnetModule(LightningModule):
         self.val_precision(preds, targets)
         self.val_confusion_matrix(preds, targets)
 
-        self.log("val/loss", self.val_loss,
-                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/acc", self.val_acc, on_step=True,
-                 on_epoch=True, prog_bar=True, logger=True)
-        self.log("val/f1", self.val_f1,
-                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/recall", self.val_recall,
-                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/precision", self.val_precision,
-                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
-
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
@@ -245,6 +246,17 @@ class ResnetModule(LightningModule):
         self.val_recall.reset()
         self.val_precision.reset()
         self.val_confusion_matrix.reset()
+
+        self.log("val/loss", self.val_loss.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/acc", self.val_acc.compute(), on_step=False,
+                 on_epoch=True, prog_bar=True, logger=True)
+        self.log("val/f1", self.val_f1,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/recall", self.val_recall.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/precision", self.val_precision.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
 
