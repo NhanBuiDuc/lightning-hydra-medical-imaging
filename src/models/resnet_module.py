@@ -181,7 +181,7 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True)
         self.log("train/precision", self.train_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/confusion_matrix", self.train_confusion_matrix.compute(),
+        self.log("train/confusion_matrix", self.train_confusion_matrix,
                  on_step=False, on_epoch=True, prog_bar=True)
         self.train_confusion_matrix.plot()
         # return loss or backpropagation will fail
@@ -218,7 +218,7 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True)
         self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/confusion_matrix", self.val_confusion_matrix.compute(),
+        self.log("val/confusion_matrix", self.val_confusion_matrix,
                  on_step=False, on_epoch=True, prog_bar=True)
         self.train_confusion_matrix.plot()
 
