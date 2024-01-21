@@ -8,7 +8,6 @@ from torchvision.ops.focal_loss import sigmoid_focal_loss
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import pandas as pd
-import seaborn as sns
 
 
 class ResnetModule(LightningModule):
@@ -174,26 +173,31 @@ class ResnetModule(LightningModule):
         self.train_precision(preds, targets)
         self.train_confusion_matrix(preds, targets)
 
-        self.log("train/loss", self.train_loss.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/acc", self.train_acc.compute(), on_step=False,
-                 on_epoch=True, prog_bar=True)
-        self.log("train/f1", self.train_f1.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/recall", self.train_recall.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/precision", self.train_precision.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-
+        self.log("train/loss", self.train_loss,
+                 on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train/acc", self.train_acc, on_step=False,
+                 on_epoch=True, prog_bar=True,  logger=True)
+        self.log("train/f1", self.train_f1,
+                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("train/recall", self.train_recall,
+                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("train/precision", self.train_precision,
+                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
         # return loss or backpropagation will fail
         return loss
 
     def on_train_epoch_end(self) -> None:
         "Lightning hook that is called when a training epoch ends."
-        confusion_matrix_computed = self.train_confusion_matrix.compute(
-        ).detach().cpu().numpy().astype(int)
-        self.loggers[0].log_metrics(
-            {"train/loss": self.train_loss.compute(), "train/acc": self.train_acc.compute(), "train/f1": self.train_f1.compute(), "train/recall": self.train_recall.compute(), "train/precision": self.train_precision.compute(), "train/confusion_matrix": confusion_matrix_computed})
+        self.train_loss.reset()
+        self.train_acc.reset()
+        self.train_f1.reset()
+        self.train_recall.reset()
+        self.train_precision.reset()
+        self.train_confusion_matrix.reset()
+        # confusion_matrix_computed = self.train_confusion_matrix.compute(
+        # ).detach().cpu().numpy().astype(int)
+        # self.loggers[0].log_metrics(
+        #     {"train/loss": self.train_loss.compute(), "train/acc": self.train_acc.compute(), "train/f1": self.train_f1.compute(), "train/recall": self.train_recall.compute(), "train/precision": self.train_precision.compute(), "train/confusion_matrix": confusion_matrix_computed})
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single validation step on a batch of data from the validation set.
@@ -212,30 +216,37 @@ class ResnetModule(LightningModule):
         self.val_precision(preds, targets)
         self.val_confusion_matrix(preds, targets)
 
-        self.log("val/loss", self.val_loss.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc.compute(), on_step=False,
-                 on_epoch=True, prog_bar=True)
-        self.log("val/f1", self.val_f1.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/recall", self.val_recall.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/precision", self.val_precision.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/loss", self.val_loss,
+                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/acc", self.val_acc, on_step=True,
+                 on_epoch=True, prog_bar=True, logger=True)
+        self.log("val/f1", self.val_f1,
+                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/recall", self.val_recall,
+                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/precision", self.val_precision,
+                 on_step=True, on_epoch=True, prog_bar=True,  logger=True)
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
         f1 = self.val_f1.compute()
         self.val_f1_best.update(f1)  # update best so far val acc
+        self.val_loss.reset()
+        self.val_acc.reset()
+        self.val_f1.reset()
+        self.val_recall.reset()
+        self.val_precision.reset()
+        self.val_confusion_matrix.reset()
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
-        self.log("val/f1_best", self.val_f1_best.compute(),
-                 sync_dist=True, prog_bar=True)
-        confusion_matrix_computed = self.val_confusion_matrix.compute(
-        ).detach().cpu().numpy().astype(int)
-        self.loggers[0].log_metrics(
-            {"val/loss": self.val_loss.compute(), "val/acc": self.val_acc.compute(), "val/f1": self.val_f1.compute(), "val/recall": self.val_recall.compute(), "val/precision": self.val_precision.compute(), "val/confusion_matrix": confusion_matrix_computed, "val/f1_best": self.val_f1_best.compute()})
+
+        # self.log("val/f1_best", self.val_f1_best.compute(),
+        #          sync_dist=True, prog_bar=True)
+        # confusion_matrix_computed = self.val_confusion_matrix.compute(
+        # ).detach().cpu().numpy().astype(int)
+        # self.loggers[0].log_metrics(
+        #     {"val/loss": self.val_loss.compute(), "val/acc": self.val_acc.compute(), "val/f1": self.val_f1.compute(), "val/recall": self.val_recall.compute(), "val/precision": self.val_precision.compute(), "val/confusion_matrix": confusion_matrix_computed, "val/f1_best": self.val_f1_best.compute()})
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
@@ -247,22 +258,22 @@ class ResnetModule(LightningModule):
         loss, preds, targets = self.model_step(batch)
 
         # update and log metrics
-        self.val_loss(loss)
-        self.val_acc(preds, targets)
-        self.val_f1(preds, targets)
-        self.val_recall(preds, targets)
-        self.val_precision(preds, targets)
+        self.val_loss.update(loss)
+        self.val_acc.update(preds, targets)
+        self.val_f1.update(preds, targets)
+        self.val_recall.update(preds, targets)
+        self.val_precision.update(preds, targets)
 
-        self.log("val/loss", self.val_loss.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/acc", self.val_acc.compute(), on_step=False,
+        self.log("val/loss", self.val_loss,
+                 on_step=True, on_epoch=True, prog_bar=True)
+        self.log("val/acc", self.val_acc, on_step=True,
                  on_epoch=True, prog_bar=True)
-        self.log("val/f1", self.val_f1.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/recall", self.val_recall.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val/precision", self.val_precision.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/f1", self.val_f1,
+                 on_step=True, on_epoch=True, prog_bar=True)
+        self.log("val/recall", self.val_recall,
+                 on_step=True, on_epoch=True, prog_bar=True)
+        self.log("val/precision", self.val_precision,
+                 on_step=True, on_epoch=True, prog_bar=True)
 
     def on_test_epoch_end(self) -> None:
         """Lightning hook that is called when a test epoch ends."""
