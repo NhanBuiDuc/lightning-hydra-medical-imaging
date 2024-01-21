@@ -143,10 +143,10 @@ class ResnetModule(LightningModule):
             logits = self.forward(x)
             loss = self.criterion(logits, y)
             preds = torch.argmax(logits, dim=1)
-            preds_one_hot = F.one_hot(preds, num_classes=self.num_classes)
+            preds_one_hot = F.one_hot(preds, num_classes=self.net.num_classes)
 
             ground_truth = torch.argmax(y, dim=1)
-            y = F.one_hot(ground_truth, num_classes=self.num_classes)
+            y = F.one_hot(ground_truth, num_classes=self.net.num_classes)
             return loss, preds_one_hot, y
         else:
             return None, None, None
