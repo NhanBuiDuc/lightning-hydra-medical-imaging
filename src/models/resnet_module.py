@@ -125,7 +125,6 @@ class ResnetModule(LightningModule):
         self.train_recall.reset()
         self.train_precision.reset()
         self.train_acc.reset()
-        self.train_f1_best.reset()
         self.train_confusion_matrix.reset()
 
         self.val_loss.reset()
