@@ -68,11 +68,11 @@ class ResnetModule(LightningModule):
         else:
             self.task = "binary"
         # loss function
-        if criterion == "Entropy":
+        if criterion == "entropy":
             if self.net.num_classes > 2:
                 self.criterion = torch.nn.CrossEntropyLoss()
             self.criterion = torch.nn.BCELoss()
-        elif criterion == "Focal":
+        elif criterion == "focal":
             self.criterion = sigmoid_focal_loss
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(
@@ -121,6 +121,13 @@ class ResnetModule(LightningModule):
         # so it's worth to make sure validation metrics don't store results from these checks
         # Empty the GPU memory cache
         torch.cuda.empty_cache()
+        self.train_loss.reset()
+        self.train_recall.reset()
+        self.train_precision.reset()
+        self.train_acc.reset()
+        self.train_f1_best.reset()
+        self.train_confusion_matrix.reset()
+
         self.val_loss.reset()
         self.val_recall.reset()
         self.val_precision.reset()
@@ -175,7 +182,7 @@ class ResnetModule(LightningModule):
 
         self.log("train/loss", self.train_loss,
                  on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        self.log("train/acc", self.train_acc, on_step=False,
+        self.log("train/acc", self.train_acc, on_step=True,
                  on_epoch=True, prog_bar=True,  logger=True)
         self.log("train/f1", self.train_f1,
                  on_step=True, on_epoch=True, prog_bar=True,  logger=True)
@@ -232,6 +239,7 @@ class ResnetModule(LightningModule):
         # acc = self.val_acc.compute()  # get current val acc
         f1 = self.val_f1.compute()
         self.val_f1_best.update(f1)  # update best so far val acc
+
         self.val_loss.reset()
         self.val_acc.reset()
         self.val_f1.reset()
