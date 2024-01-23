@@ -86,7 +86,7 @@ class IsbiDataModule(LightningDataModule):
         """
         # Load the CSV file into a pandas DataFrame
         self.train_gt_pdf = pd.read_csv(self.train_gt_path, delimiter=';')
-        self.train_gt_pdf = self.train_gt_pdf[:100]
+        # self.train_gt_pdf = self.train_gt_pdf[:100]
         self.train_image_name = self.train_gt_pdf["Eye ID"]
         self.train_label_list = self.train_gt_pdf.iloc[:, 1:].apply(
             lambda row: {col.lower(): row[col] for col in self.train_gt_pdf.columns[1:]}, axis=1).tolist()
@@ -124,10 +124,10 @@ class IsbiDataModule(LightningDataModule):
             val_input_data = input_data[val_indexes].tolist()
             val_label_data = labels[val_indexes].tolist()
             self.data_train = IsbiDataSet(
-                train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.is_transform, self.transforms)
+                train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
             self.data_val = IsbiDataSet(
-                val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.is_transform, self.transforms)
+                val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
@@ -259,11 +259,12 @@ class IsbiDataModule(LightningDataModule):
 
 
 class IsbiDataSet(Dataset):
-    def __init__(self, data, label, class_name, data_length, data_dir, is_transform, transform):
+    def __init__(self, data, label, class_name, data_length, data_dir, train_image_path, is_transform, transform):
         super().__init__()
         self.data = data
         self.label = label
         self.class_name = class_name
+        self.train_image_path = train_image_path
         self.data_length = data_length
         self.data_dir = data_dir
         self.is_transform = is_transform
@@ -278,7 +279,7 @@ class IsbiDataSet(Dataset):
         try:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
-                self.data_dir, "ISBI_2024/images/", self.data[index] + ".jpg")
+                self.data_dir,  self.train_image_path, self.data[index] + ".jpg")
             # Replacing backslashes with forward slashes
             image_path = image_path.replace("\\", "/")
             image = Image.open(image_path).convert('RGB')  # Adjust as needed
@@ -287,7 +288,7 @@ class IsbiDataSet(Dataset):
             try:
                 # If the file with .jpg extension is not found, try to open the image with .png extension
                 image_path = os.path.join(
-                    self.data_dir, "ISBI_2024/images/", self.data[index] + ".png")
+                    self.data_dir,  self.train_image_path, self.data[index] + ".png")
                 # Replacing backslashes with forward slashes
                 image_path = image_path.replace("\\", "/")
                 image = Image.open(image_path).convert(
@@ -297,7 +298,7 @@ class IsbiDataSet(Dataset):
                 try:
                     # If the file with .jpg extension is not found, try to open the image with .png extension
                     image_path = os.path.join(
-                        self.data_dir, "ISBI_2024/images/", self.data[index] + ".jpeg")
+                        self.data_dir,  self.train_image_path, self.data[index] + ".jpeg")
                     # Replacing backslashes with forward slashes
                     image_path = image_path.replace("\\", "/")
                     image = Image.open(image_path).convert(
