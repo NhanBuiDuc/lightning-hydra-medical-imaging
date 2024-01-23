@@ -66,7 +66,7 @@ class IsbiDataModule(LightningDataModule):
         self.num_workers = num_workers
         self.pin_memory = pin_memory
         self.train_image_path = os.path.join(
-            self.data_dir, "ISBI-2024/resize_512_images/")
+            self.data_dir, "ISBI_2024/resize_512_images/")
         self.train_gt_path = os.path.join(
             self.data_dir, "ISBI_2024", "JustRAIGS_Train_labels.csv")
         self.train_gt_path = self.train_gt_path.replace("\\", "/")
