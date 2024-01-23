@@ -74,7 +74,7 @@ class ResnetModule(LightningModule):
                 self.criterion = torch.nn.CrossEntropyLoss()
             self.criterion = torch.nn.BCELoss()
         elif criterion == "focal":
-            self.criterion = FocalLoss()
+            self.criterion = FocalLoss(alpha=0.2, gamma=2)
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(
             task=self.task, num_classes=self.net.num_classes)
