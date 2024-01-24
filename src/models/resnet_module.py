@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import pandas as pd
 from .components.focal_loss import FocalLoss
+from .components.specificity_95 import Specificity
 
 
 class ResnetModule(LightningModule):
@@ -75,6 +76,7 @@ class ResnetModule(LightningModule):
             self.criterion = torch.nn.BCELoss()
         elif criterion == "focal":
             self.criterion = FocalLoss(alpha=0.2, gamma=2)
+
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(
             task=self.task, num_classes=self.net.num_classes)
@@ -95,10 +97,10 @@ class ResnetModule(LightningModule):
         self.val_precision = Precision(
             task=self.task, num_classes=self.net.num_classes)
 
-        self.train_confusion_matrix = ConfusionMatrix(
-            task=self.task, num_classes=self.net.num_classes)
-        self.val_confusion_matrix = ConfusionMatrix(
-            task=self.task, num_classes=self.net.num_classes)
+        # self.train_confusion_matrix = ConfusionMatrix(
+        #     task=self.task, num_classes=self.net.num_classes)
+        # self.val_confusion_matrix = ConfusionMatrix(
+        #     task=self.task, num_classes=self.net.num_classes)
 
         # for averaging loss across batches
         self.train_loss = MeanMetric()
@@ -106,7 +108,10 @@ class ResnetModule(LightningModule):
 
         # for tracking best so far validation F1
         # self.val_acc_best = MaxMetric()
-        self.val_f1_best = MaxMetric()
+        # self.val_f1_best = MaxMetric()
+        self.train_specificity_95 = Specificity(0.95)
+        self.val_specificity_95 = Specificity(0.95)
+        self.val_specificity_95_best = MaxMetric()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
@@ -126,14 +131,17 @@ class ResnetModule(LightningModule):
         self.train_recall.reset()
         self.train_precision.reset()
         self.train_acc.reset()
-        self.train_confusion_matrix.reset()
+        # self.train_confusion_matrix.reset()
+        self.train_specificity_95.reset()
 
+        self.val_specificity_95.reset()
+        self.val_specificity_95_best.reset()
         self.val_loss.reset()
         self.val_recall.reset()
         self.val_precision.reset()
         self.val_acc.reset()
-        self.val_f1_best.reset()
-        self.val_confusion_matrix.reset()
+        # self.val_f1_best.reset()
+        # self.val_confusion_matrix.reset()
 
     def model_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor]
@@ -178,7 +186,8 @@ class ResnetModule(LightningModule):
         self.train_f1(preds, targets)
         self.train_recall(preds, targets)
         self.train_precision(preds, targets)
-        self.train_confusion_matrix(preds, targets)
+        self.train_specificity_95(preds, targets)
+        # self.train_confusion_matrix(preds, targets)
 
         self.log("train/loss", self.train_loss,
                  on_step=True, on_epoch=False, prog_bar=True, logger=True)
@@ -189,6 +198,8 @@ class ResnetModule(LightningModule):
         self.log("train/recall", self.train_recall,
                  on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         self.log("train/precision", self.train_precision,
+                 on_step=True, on_epoch=False, prog_bar=True,  logger=True)
+        self.log("train/specificity_95", self.train_specificity_95,
                  on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         # return loss or backpropagation will fail
         return loss
@@ -201,7 +212,7 @@ class ResnetModule(LightningModule):
         self.train_f1.reset()
         self.train_recall.reset()
         self.train_precision.reset()
-        self.train_confusion_matrix.reset()
+        self.train_specificity_95.reset()
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single validation step on a batch of data from the validation set.
@@ -218,7 +229,7 @@ class ResnetModule(LightningModule):
         self.val_f1(preds, targets)
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
-        self.val_confusion_matrix(preds, targets)
+        self.val_specificity_95(preds, targets)
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
@@ -236,10 +247,19 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/specificity_95", self.val_specificity_95,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
-        self.log("val/f1_best", self.val_f1_best.compute(),
-                 sync_dist=True, prog_bar=True)
+        # self.log("val/f1_best", self.val_f1_best.compute(),
+        #          sync_dist=True, prog_bar=True)
+
+        self.val_specificity_95.reset()
+        self.val_loss.reset()
+        self.val_recall.reset()
+        self.val_f1.reset()
+        self.val_precision.reset()
+        self.val_acc.reset()
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
