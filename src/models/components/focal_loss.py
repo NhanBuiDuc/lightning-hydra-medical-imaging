@@ -16,8 +16,7 @@ class FocalLoss(nn.Module):
         self.size_average = size_average
 
     def forward(self, input, target):
-        target = torch.tensor(target.clone(), dtype=torch.int64)
-
+        target = target.clone().detach().requires_grad_(True).to(dtype=torch.int64)
         # if input.dim() > 2:
         #     # N,C,H,W => N,C,H*W
         #     input = input.view(input.size(0), input.size(1), -1)

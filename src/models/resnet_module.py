@@ -109,7 +109,7 @@ class ResnetModule(LightningModule):
         # for tracking best so far validation F1
         # self.val_acc_best = MaxMetric()
         # self.val_f1_best = MaxMetric()
-        self.train_specificity_95 = Specificity(0.95)
+        # self.train_specificity_95 = Specificity(0.95)
         self.val_specificity_95 = Specificity(0.95)
         self.val_specificity_95_best = MaxMetric()
 
@@ -132,7 +132,7 @@ class ResnetModule(LightningModule):
         self.train_precision.reset()
         self.train_acc.reset()
         # self.train_confusion_matrix.reset()
-        self.train_specificity_95.reset()
+        # self.train_specificity_95.reset()
 
         self.val_specificity_95.reset()
         self.val_specificity_95_best.reset()
@@ -197,7 +197,7 @@ class ResnetModule(LightningModule):
         self.train_f1(preds, targets)
         self.train_recall(preds, targets)
         self.train_precision(preds, targets)
-        self.train_specificity_95(preds, targets)
+        # self.train_specificity_95(preds, targets)
         # self.train_confusion_matrix(preds, targets)
 
         self.log("train/loss", self.train_loss,
@@ -210,8 +210,6 @@ class ResnetModule(LightningModule):
                  on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         self.log("train/precision", self.train_precision,
                  on_step=True, on_epoch=False, prog_bar=True,  logger=True)
-        self.log("train/specificity_95", self.train_specificity_95,
-                 on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         # return loss or backpropagation will fail
         return loss
 
@@ -223,7 +221,7 @@ class ResnetModule(LightningModule):
         self.train_f1.reset()
         self.train_recall.reset()
         self.train_precision.reset()
-        self.train_specificity_95.reset()
+        # self.train_specificity_95.reset()
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single validation step on a batch of data from the validation set.
@@ -268,12 +266,12 @@ class ResnetModule(LightningModule):
         # self.log("val/f1_best", self.val_f1_best.compute(),
         #          sync_dist=True, prog_bar=True)
 
-        self.val_specificity_95.reset()
-        self.val_loss.reset()
-        self.val_recall.reset()
-        self.val_f1.reset()
-        self.val_precision.reset()
-        self.val_acc.reset()
+        # self.val_specificity_95.reset()
+        # self.val_loss.reset()
+        # self.val_recall.reset()
+        # self.val_f1.reset()
+        # self.val_precision.reset()
+        # self.val_acc.reset()
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
