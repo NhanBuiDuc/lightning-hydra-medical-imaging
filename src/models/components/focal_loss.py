@@ -14,7 +14,7 @@ class BinaryFocalLoss(nn.Module):
 
     def forward(self, input, target):
         loss = sigmoid_focal_loss(inputs=input, targets=target, alpha=self.alpha,
-                                  gamma=self.gamma, size_average=self.reduction)
+                                  gamma=self.gamma, reduction=self.reduction)
         return loss
 
 
