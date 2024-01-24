@@ -142,10 +142,9 @@ class IsbiDataModule(LightningDataModule):
                     train_indexes, val_indexes = all_splits[k]
 
                     # Count the number of samples in class 1 in the training set
-                    count_class_1 = labels.iloc[train_indexes].sum()
-
+                    count_class_1 = (labels.iloc[train_indexes] == 'RG').sum()
                     # Remove samples of class 0 until it equals the count of class 1
-                    class_0_indexes = train_indexes[labels.iloc[train_indexes] == "RG"]
+                    class_0_indexes = train_indexes[labels.iloc[train_indexes] == "NRG"]
                     np.random.shuffle(class_0_indexes)
                     class_0_indexes_to_keep = class_0_indexes[:count_class_1]
 
