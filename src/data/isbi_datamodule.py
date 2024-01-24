@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import torch
 from lightning import LightningDataModule
-from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, WeightedRandomSampler
 from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 import os
@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 from PIL import Image
 from sklearn.model_selection import StratifiedKFold
+from sklearn.utils.class_weight import compute_class_weight
 
 
 class IsbiDataModule(LightningDataModule):
@@ -125,6 +126,14 @@ class IsbiDataModule(LightningDataModule):
 
                 val_input_data = input_data[val_indexes].tolist()
                 val_label_data = labels[val_indexes].tolist()
+
+                class_weights = compute_class_weight(
+                    'balanced', classes=torch.unique(labels), y=labels[train_indexes])
+                class_weights = torch.FloatTensor(class_weights)
+
+                # Create a WeightedRandomSampler
+                self.sampler = WeightedRandomSampler(
+                    class_weights, len(class_weights), replacement=True)
                 self.data_train = IsbiDataSet(
                     train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
@@ -158,6 +167,14 @@ class IsbiDataModule(LightningDataModule):
                     val_input_data = input_data[val_indexes].tolist()
                     val_label_data = labels[val_indexes].tolist()
 
+                    # Compute class weights for WeightedRandomSampler
+                    class_weights = compute_class_weight(
+                        'balanced', classes=torch.unique(labels), y=labels[train_indexes])
+                    class_weights = torch.FloatTensor(class_weights)
+
+                    # Create a WeightedRandomSampler
+                    self.sampler = WeightedRandomSampler(
+                        class_weights, len(class_weights), replacement=True)
                     self.data_train = IsbiDataSet(
                         train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
@@ -169,13 +186,15 @@ class IsbiDataModule(LightningDataModule):
 
         :return: The train dataloader.
         """
+
         return DataLoader(
             dataset=self.data_train,
             batch_size=self.batch_size_per_device,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=True,
-            persistent_workers=True
+            persistent_workers=True,
+            sampler=self.sampler
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -189,7 +208,8 @@ class IsbiDataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            persistent_workers=True
+            persistent_workers=True,
+            sampler=self.sampler
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
