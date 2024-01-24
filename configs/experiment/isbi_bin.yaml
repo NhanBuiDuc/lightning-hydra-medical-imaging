@@ -20,6 +20,7 @@ trainer:
   gradient_clip_val: 0.5
 data:
   num_workers: 13
+  balance_data: True
 # paths:
 #   # path to data directory
 #   # data_dir: "../input/reporepo/lightning-hydra-template-main/data/"
