@@ -206,8 +206,8 @@ class ResnetModule(LightningModule):
 
         self.log("train/loss", self.train_loss,
                  on_step=True, on_epoch=False, prog_bar=True, logger=True)
-        self.log("train/acc", self.train_acc, on_step=True,
-                 on_epoch=False, prog_bar=True,  logger=True)
+        self.log("train/acc", self.train_acc,
+                 on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         self.log("train/f1", self.train_f1,
                  on_step=True, on_epoch=False, prog_bar=True,  logger=True)
         self.log("train/recall", self.train_recall,
