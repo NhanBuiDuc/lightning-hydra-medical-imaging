@@ -6,7 +6,7 @@ from torchvision.ops.focal_loss import sigmoid_focal_loss
 
 
 class BinaryFocalLoss(nn.Module):
-    def __init__(self, gamma=2, alpha=0.25, reduction=True):
+    def __init__(self, gamma=2, alpha=0.25, reduction="mean"):
         super(BinaryFocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
