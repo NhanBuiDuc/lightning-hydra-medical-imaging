@@ -60,6 +60,7 @@ class IsbiDataModule(LightningDataModule):
         self.image_size = image_size
         self.class_name = class_name
         self.num_class = num_class
+        self.batch_size = batch_size
         self.kfold_seed = kfold_seed
         self.kfold_seed_list = kfold_seed_list
         self.training_split = train_val_test_split[0]
@@ -187,7 +188,8 @@ class IsbiDataModule(LightningDataModule):
 
         :return: The train dataloader.
         """
-
+        sampler = WeightedRandomSampler(
+            weights=[0.5, 0.5], num_samples=self.batch_size)
         return DataLoader(
             dataset=self.data_train,
             batch_size=self.batch_size_per_device,
@@ -195,7 +197,7 @@ class IsbiDataModule(LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             shuffle=True,
             persistent_workers=True,
-            sampler=self.sampler
+            sampler=sampler
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -203,6 +205,8 @@ class IsbiDataModule(LightningDataModule):
 
         :return: The validation dataloader.
         """
+        sampler = WeightedRandomSampler(
+            weights=[0.5, 0.5], num_samples=self.batch_size)
         return DataLoader(
             dataset=self.data_val,
             batch_size=self.batch_size_per_device,
@@ -210,7 +214,7 @@ class IsbiDataModule(LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
             persistent_workers=True,
-            sampler=self.sampler
+            sampler=sampler
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
