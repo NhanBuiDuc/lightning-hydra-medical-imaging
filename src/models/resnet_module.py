@@ -263,7 +263,7 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/specificity_95", self.val_specificity_95.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/val_specificity_95_best", self.val_specificity_95_best.compute(),
+        self.log("val/specificity_95_best", self.val_specificity_95_best.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
