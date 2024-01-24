@@ -157,14 +157,25 @@ class ResnetModule(LightningModule):
         """
         if batch is not None:
             x, y = batch
-            logits = self.forward(x)
-            loss = self.criterion(logits, y)
-            preds = torch.argmax(logits, dim=1)
-            preds_one_hot = F.one_hot(preds, num_classes=self.net.num_classes)
 
-            ground_truth = torch.argmax(y, dim=1)
-            y = F.one_hot(ground_truth, num_classes=self.net.num_classes)
-            return loss, preds_one_hot, y
+            if self.net.num_classes > 2:
+                y = y.view(y.shape[0], -1)
+                logits = self.forward(x)
+                loss = self.criterion(logits, y)
+                preds = torch.argmax(logits, dim=1)
+                preds_one_hot = F.one_hot(
+                    preds, num_classes=self.net.num_classes)
+
+                ground_truth = torch.argmax(y, dim=1)
+                y = F.one_hot(ground_truth, num_classes=self.net.num_classes)
+                return loss, preds_one_hot, y
+            else:
+                y = y.view(y.shape[0], 1)
+                logits = self.forward(x)
+                loss = self.criterion(logits, y)
+                preds = torch.argmax(logits, dim=1)
+                preds = preds.view(preds.shape[0], 1)
+                return loss, preds, y
         else:
             return None, None, None
 
@@ -234,20 +245,23 @@ class ResnetModule(LightningModule):
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
-        f1 = self.val_f1.compute()
-        self.val_f1_best(f1)  # update best so far val acc
+        val_specificity = self.val_specificity_95.compute()
+        # update best so far val acc
+        self.val_specificity_95_best(val_specificity)
 
         self.log("val/loss", self.val_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/acc", self.val_acc.compute(), on_step=False,
                  on_epoch=True, prog_bar=True, logger=True)
-        self.log("val/f1", f1,
+        self.log("val/f1", self.val_f1.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/recall", self.val_recall.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/specificity_95", self.val_specificity_95,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/val_specificity_95_best", self.val_specificity_95_best,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch

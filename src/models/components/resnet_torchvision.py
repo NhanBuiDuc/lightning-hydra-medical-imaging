@@ -20,12 +20,20 @@ class ResNet(nn.Module):
         }
         # Check if the specified model_type is in the switch case
         if version not in switch:
-            self.resnet = switch["resnet18"](
-                weights=None, progress=True, num_classes=num_classes)
+            if (self.num_classes > 2):
+                self.resnet = switch["resnet18"](
+                    weights=None, progress=True, num_classes=num_classes)
+            else:
+                self.resnet = switch["resnet18"](
+                    weights=None, progress=True, num_classes=num_classes-1)
         else:
-            # Initialize the ResNet model without pre-training and with progress
-            self.resnet = switch[version](
-                weights=None, progress=True, num_classes=num_classes)
+            if (self.num_classes > 2):
+                # Initialize the ResNet model without pre-training and with progress
+                self.resnet = switch[version](
+                    weights=None, progress=True, num_classes=num_classes)
+            else:
+                self.resnet = switch[version](
+                    weights=None, progress=True, num_classes=num_classes-1)
 
         self.sigmoid = nn.Sigmoid()
         self.soft_max = nn.Softmax(dim=1)

@@ -86,7 +86,7 @@ class IsbiDataModule(LightningDataModule):
         """
         # Load the CSV file into a pandas DataFrame
         self.train_gt_pdf = pd.read_csv(self.train_gt_path, delimiter=';')
-        # self.train_gt_pdf = self.train_gt_pdf[:100]
+        self.train_gt_pdf = self.train_gt_pdf[:100]
         self.train_image_name = self.train_gt_pdf["Eye ID"]
         self.train_label_list = self.train_gt_pdf.iloc[:, 1:].apply(
             lambda row: {col.lower(): row[col] for col in self.train_gt_pdf.columns[1:]}, axis=1).tolist()
@@ -318,9 +318,13 @@ class IsbiDataSet(Dataset):
             label = self.label[index]
             gt = self.class_name.index(label)
             # Create a one-hot encoded tensor
-            one_hot_encoded = torch.zeros(
-                len(self.class_name), dtype=torch.float32)
-            one_hot_encoded[gt] = torch.ones(1, dtype=torch.float32)
+            if len(self.class_name) > 2:
+                one_hot_encoded = torch.zeros(
+                    len(self.class_name), dtype=torch.float32)
+                one_hot_encoded[gt] = torch.ones(1, dtype=torch.float32)
+            else:
+                one_hot_encoded = torch.tensor(gt, dtype=torch.float32)
+
             return image, one_hot_encoded
         else:
             return None

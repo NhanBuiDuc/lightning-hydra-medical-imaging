@@ -2,7 +2,6 @@ from torchmetrics import Metric
 import torch
 from torch import Tensor
 from torchmetrics.utilities import dim_zero_cat
-import Optional
 from sklearn.metrics import roc_curve, roc_auc_score, auc
 import numpy as np
 
@@ -13,17 +12,6 @@ class Specificity(Metric):
         self.add_state("preds", default=[], dist_reduce_fx="cat")
         self.add_state("target", default=[], dist_reduce_fx="cat")
         self.desired_specificity = desired_specificity
-        # Set to True if the metric is differentiable else set to False
-        is_differentiable: Optional[bool] = None
-
-        # Set to True if the metric reaches it optimal value when the metric is maximized.
-        # Set to False if it when the metric is minimized.
-        higher_is_better: Optional[bool] = True
-
-        # Set to True if the metric during 'update' requires access to the global metric
-        # state for its calculations. If not, setting this to False indicates that all
-        # batch states are independent and we will optimize the runtime of 'forward'
-        full_state_update: bool = True
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         self.preds.append(preds)
@@ -31,9 +19,15 @@ class Specificity(Metric):
 
     def compute(self):
         # parse inputs
-        preds = dim_zero_cat(preds)
-        target = dim_zero_cat(target)
-        fpr, tpr, thresholds = roc_curve(target, preds)
+        # Concatenate the lists of tensors into single tensors
+        preds = torch.cat(self.preds, dim=0)
+        target = torch.cat(self.target, dim=0)
+        preds = preds.clone().cpu().numpy()
+        preds = np.squeeze(preds)
+        target = target.clone().cpu().numpy()
+        target = np.squeeze(target)
+        fpr, tpr, thresholds = roc_curve(
+            preds, target)
 
         # Find the index of the threshold that is closest to the desired specificity
         idx = np.argmax(fpr >= (1 - self.desired_specificity))
