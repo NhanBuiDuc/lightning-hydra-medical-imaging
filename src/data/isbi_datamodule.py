@@ -127,8 +127,9 @@ class IsbiDataModule(LightningDataModule):
                 val_input_data = input_data[val_indexes].tolist()
                 val_label_data = labels[val_indexes].tolist()
 
-                class_weights = compute_class_weight(
-                    'balanced', classes=torch.unique(labels), y=labels[train_indexes])
+                # Compute class weights for WeightedRandomSampler
+                class_weights = compute_class_weight('balanced', classes=np.unique(
+                    labels[train_indexes]), y=labels[train_indexes])
                 class_weights = torch.FloatTensor(class_weights)
 
                 # Create a WeightedRandomSampler
@@ -168,8 +169,8 @@ class IsbiDataModule(LightningDataModule):
                     val_label_data = labels[val_indexes].tolist()
 
                     # Compute class weights for WeightedRandomSampler
-                    class_weights = compute_class_weight(
-                        'balanced', classes=torch.unique(labels), y=labels[train_indexes])
+                    class_weights = compute_class_weight('balanced', classes=np.unique(
+                        labels[train_indexes]), y=labels[train_indexes])
                     class_weights = torch.FloatTensor(class_weights)
 
                     # Create a WeightedRandomSampler
