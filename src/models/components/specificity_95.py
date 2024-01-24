@@ -21,7 +21,7 @@ class Specificity(Metric):
     def compute(self):
         # parse inputs
         # Concatenate the lists of tensors into single tensors
-        if len(self.preds > 0) or len(self.target > 0):
+        if len(self.preds) > 0 or len(self.target) > 0:
             preds = torch.cat(self.preds, dim=0)
             preds = preds.to(dtype=torch.float32)
             target = torch.cat(self.target, dim=0)
