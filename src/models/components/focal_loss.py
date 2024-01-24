@@ -6,18 +6,15 @@ from torchvision.ops.focal_loss import sigmoid_focal_loss
 
 
 class BinaryFocalLoss(nn.Module):
-    def __init__(self, gamma=0, alpha=None, size_average=True):
+    def __init__(self, gamma=2, alpha=0.25, size_average=True):
         super(self).__init__()
         self.gamma = gamma
         self.alpha = alpha
-        if isinstance(alpha, (float, int)):
-            self.alpha = torch.Tensor([alpha, 1-alpha])
-        if isinstance(alpha, list):
-            self.alpha = torch.Tensor(alpha)
         self.size_average = size_average
 
     def forward(self, input, target):
-        loss = sigmoid_focal_loss(inputs=input, targets=target)
+        loss = sigmoid_focal_loss(inputs=input, targets=target, alpha=self.alpha,
+                                  gamma=self.gamma, size_average=self.size_average)
         return loss
 
 
