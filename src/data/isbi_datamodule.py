@@ -9,7 +9,7 @@ import os
 import pandas as pd
 import numpy as np
 from PIL import Image
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 
 
 class IsbiDataModule(LightningDataModule):
@@ -26,7 +26,8 @@ class IsbiDataModule(LightningDataModule):
         batch_size: int = 16,
         num_workers: int = 0,
         pin_memory: bool = False,
-        is_transform=True
+        is_transform=True,
+        balance_data=True
     ) -> None:
         """Initialize a `IsicDataModule`.
 
@@ -65,6 +66,7 @@ class IsbiDataModule(LightningDataModule):
         self.is_transform = is_transform
         self.num_workers = num_workers
         self.pin_memory = pin_memory
+        self.balance_data = balance_data
         self.train_image_path = os.path.join(
             self.data_dir, "ISBI_2024/resize_512_images/")
         self.train_gt_path = os.path.join(
@@ -106,28 +108,62 @@ class IsbiDataModule(LightningDataModule):
         :param stage: The stage to setup. Either `"fit"`, `"validate"`, `"test"`, or `"predict"`. Defaults to ``None``.
         """
         if not self.data_train and not self.data_val:
+            if not self.balance_data:
+                input_data = self.train_gt_pdf['Eye ID']
+                labels = self.train_gt_pdf['Final Label']
+                # choose fold to train on
+                kf = StratifiedKFold(n_splits=len(self.kfold_seed_list),
+                                     shuffle=True, random_state=self.kfold_seed)
+                all_splits = [k for k in kf.split(
+                    input_data, labels)]
+                k = self.kfold_seed_list.index(self.kfold_seed)
+                train_indexes, val_indexes = all_splits[k]
+                train_indexes, val_indexes = train_indexes.tolist(), val_indexes.tolist()
 
-            input_data = self.train_gt_pdf['Eye ID']
-            labels = self.train_gt_pdf['Final Label']
-            # choose fold to train on
-            kf = KFold(n_splits=len(self.kfold_seed_list),
-                       shuffle=True, random_state=self.kfold_seed)
-            all_splits = [k for k in kf.split(
-                input_data, labels)]
-            k = self.kfold_seed_list.index(self.kfold_seed)
-            train_indexes, val_indexes = all_splits[k]
-            train_indexes, val_indexes = train_indexes.tolist(), val_indexes.tolist()
+                train_input_data = input_data[train_indexes].tolist()
+                train_label_data = labels[train_indexes].tolist()
 
-            train_input_data = input_data[train_indexes].tolist()
-            train_label_data = labels[train_indexes].tolist()
+                val_input_data = input_data[val_indexes].tolist()
+                val_label_data = labels[val_indexes].tolist()
+                self.data_train = IsbiDataSet(
+                    train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
-            val_input_data = input_data[val_indexes].tolist()
-            val_label_data = labels[val_indexes].tolist()
-            self.data_train = IsbiDataSet(
-                train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
+                self.data_val = IsbiDataSet(
+                    val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
+            else:
+                if self.balance_data:
+                    input_data = self.train_gt_pdf['Eye ID']
+                    labels = self.train_gt_pdf['Final Label']
+                    # Choose fold to train on
+                    kf = StratifiedKFold(n_splits=len(self.kfold_seed_list),
+                                         shuffle=True, random_state=self.kfold_seed)
+                    all_splits = [k for k in kf.split(input_data, labels)]
+                    k = self.kfold_seed_list.index(self.kfold_seed)
+                    train_indexes, val_indexes = all_splits[k]
 
-            self.data_val = IsbiDataSet(
-                val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
+                    # Count the number of samples in class 1 in the training set
+                    count_class_1 = labels.iloc[train_indexes].sum()
+
+                    # Remove samples of class 0 until it equals the count of class 1
+                    class_0_indexes = train_indexes[labels.iloc[train_indexes] == 0]
+                    np.random.shuffle(class_0_indexes)
+                    class_0_indexes_to_keep = class_0_indexes[:count_class_1]
+
+                    # Combine class 1 indexes with selected class 0 indexes
+                    train_indexes = list(
+                        set(train_indexes) & set(class_0_indexes_to_keep))
+
+                    train_input_data = input_data[train_indexes].tolist()
+                    train_label_data = labels[train_indexes].tolist()
+
+                    val_input_data = input_data[val_indexes].tolist()
+                    val_label_data = labels[val_indexes].tolist()
+
+                    self.data_train = IsbiDataSet(
+                        train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
+
+                    self.data_val = IsbiDataSet(
+                        val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
@@ -205,7 +241,7 @@ class IsbiDataModule(LightningDataModule):
 
         return class_distribution
 
-    def split_datasets(self):
+    def split_balance_datasets(self, unbalance_class_name):
         # List to store the training DataFrames
         train_dfs = []
         val_dfs = []
@@ -216,6 +252,58 @@ class IsbiDataModule(LightningDataModule):
 
         # Loop through each class column
         for class_column in self.train_gt_pdf.columns[1:]:
+            # Extract the current class label
+            current_class = class_column
+
+            # Filter rows for the current class
+            class_df = self.train_gt_pdf[self.train_gt_pdf[current_class] == 1.0]
+
+            # Sample 80% of the data for the current class
+            sampled_train_df = class_df.groupby(current_class).apply(
+                sample_data, ratio=self.training_split)
+
+            train_dfs.append(sampled_train_df)
+
+        train_data = pd.concat(train_dfs)
+        remain_df = self.train_gt_pdf[~self.train_gt_pdf['image'].isin(
+            train_data['image'])]
+        # Add the following assertion
+        assert len(remain_df) + len(train_data) == len(
+            self.train_gt_pdf), "Mismatch in lengths of remain_df and train_data with original ground truth!"
+
+        val_data = self.train_gt_pdf[~self.train_gt_pdf['image'].isin(
+            train_data['image'])]
+
+        assert len(train_data) + len(val_data) == len(
+            self.train_gt_pdf), "Mismatch in lengths of remain_df and train_data and val_data with original ground truth!"
+        assert len(self.train_gt_pdf['image'].unique()) == len(
+            self.train_gt_pdf), "Duplicate instances in original train_data!"
+        assert len(train_data['image'].unique()) == len(
+            train_data), "Duplicate instances in train_data!"
+        # Check if values in the "image" column of val_data are unique
+        assert len(val_data['image'].unique()) == len(
+            val_data), "Duplicate instances in val_data!"
+        # Convert the "image" columns to sets
+        train_images_set = set(train_data['image'])
+        val_images_set = set(val_data['image'])
+        # Check for overlap using set operations
+        assert not train_images_set.intersection(
+            val_images_set), "Overlap between train_data and val_data!"
+        # Check if values in the "image" column of train_data are unique
+
+        return train_data, val_data
+
+    def split_datasets(self):
+        # List to store the training DataFrames
+        train_dfs = []
+        val_dfs = []
+        # Function to return a random sample of 70% data from each class
+
+        def sample_data(group, ratio):
+            return group.sample(frac=ratio)
+
+        # Loop through each class column
+        for class_column in self.class_name:
             # Extract the current class label
             current_class = class_column
 
