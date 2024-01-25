@@ -177,28 +177,28 @@ class IsbiDataModule(LightningDataModule):
                     # Shuffle the merged indexes
                     np.random.shuffle(merged_indexes)
                     # Assuming you want equal samples from each class in a batch
-                    train_num_samples_per_class = train_count_class_1 // 2
-                    self.train_balanced_batch_sampler = BatchSampler(
-                        WeightedRandomSampler(
-                            torch.ones(len(train_class_1_indexes)), train_num_samples_per_class, replacement=True
-                        ),
-                        WeightedRandomSampler(
-                            torch.ones(len(train_class_1_indexes)), train_num_samples_per_class, replacement=True
-                        ),
-                        batch_size=self.batch_size,
-                        drop_last=True,
-                    )
-                    val_num_samples_per_class = val_count_class_1 // 2
-                    self.val_balanced_batch_sampler = BatchSampler(
-                        WeightedRandomSampler(
-                            torch.ones(len(train_class_1_indexes)), val_num_samples_per_class, replacement=True
-                        ),
-                        WeightedRandomSampler(
-                            torch.ones(len(train_class_1_indexes)), val_num_samples_per_class, replacement=True
-                        ),
-                        batch_size=self.batch_size,
-                        drop_last=True,
-                    )
+                    # train_num_samples_per_class = train_count_class_1 // 2
+                    # self.train_balanced_batch_sampler = BatchSampler(
+                    #     WeightedRandomSampler(
+                    #         torch.ones(len(train_class_1_indexes)), train_num_samples_per_class, replacement=True
+                    #     ),
+                    #     WeightedRandomSampler(
+                    #         torch.ones(len(train_class_1_indexes)), train_num_samples_per_class, replacement=True
+                    #     ),
+                    #     batch_size=self.batch_size,
+                    #     drop_last=True,
+                    # )
+                    # val_num_samples_per_class = val_count_class_1 // 2
+                    # self.val_balanced_batch_sampler = BatchSampler(
+                    #     WeightedRandomSampler(
+                    #         torch.ones(len(train_class_1_indexes)), val_num_samples_per_class, replacement=True
+                    #     ),
+                    #     WeightedRandomSampler(
+                    #         torch.ones(len(train_class_1_indexes)), val_num_samples_per_class, replacement=True
+                    #     ),
+                    #     batch_size=self.batch_size,
+                    #     drop_last=True,
+                    # )
                     train_input_data = input_data[merged_indexes].tolist()
                     train_label_data = labels[merged_indexes].tolist()
 
