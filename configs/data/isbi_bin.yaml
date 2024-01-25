@@ -1,13 +1,14 @@
 _target_: src.data.isbi_datamodule.IsbiDataModule
-  data_dir: ${paths.data_dir}
-  batch_size: 16 # Needs to be divisible by the number of devices (e.g., if in a distributed setup)
-  train_val_test_split: [0.8, 0.2]
-  image_size: 224
-  num_class: 2
-  class_name: ["NRG", "RG"]
-  kfold_seed: 111,
-  kfold_seed_list: [111, 222, 333, 444, 555]
-  num_workers: 1
-  pin_memory: False
-  is_transform: True
-  balance_data: True
+data_dir: ${paths.data_dir}
+batch_size: 16 # Needs to be divisible by the number of devices (e.g., if in a distributed setup)
+train_val_test_split: [0.8, 0.2]
+image_size: 224
+num_class: 2
+class_name: ["NRG", "RG"]
+kfold_seed: 111,
+kfold_seed_list: [111, 222, 333, 444, 555]
+num_workers: 1
+pin_memory: False
+is_transform: True
+balance_data: True
+binary_unbalance_train_ratio: 100
