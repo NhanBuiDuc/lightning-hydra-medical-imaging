@@ -220,12 +220,11 @@ class IsbiDataModule(LightningDataModule):
             weights=[0.5, 0.5], num_samples=self.batch_size)
         return DataLoader(
             dataset=self.data_train,
-            batch_size=self.batch_size_per_device,
+            batch_size=self.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            persistent_workers=True,
-            batch_sampler=self.train_balanced_batch_sampler
+            persistent_workers=True
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -236,7 +235,7 @@ class IsbiDataModule(LightningDataModule):
 
         return DataLoader(
             dataset=self.data_val,
-            batch_size=self.batch_size_per_device,
+            batch_size=self.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
