@@ -29,6 +29,7 @@ class IsbiDataModule(LightningDataModule):
         pin_memory: bool = False,
         is_transform=True,
         balance_data=True,
+        binary_unbalance_train_ratio=100
     ) -> None:
         """Initialize a `IsicDataModule`.
 
