@@ -154,29 +154,27 @@ class IsbiDataModule(LightningDataModule):
 
                     # Count the number of samples in class 1 in the training set
                     count_class_1 = (labels.iloc[train_indexes] == 'RG').sum()
+                    count_class_0 = (labels.iloc[train_indexes] == 'NRG').sum()
                     # Remove samples of class 0 until it equals the count of class 1
                     class_0_indexes = train_indexes[labels.iloc[train_indexes] == "NRG"]
+                    class_1_indexes = train_indexes[labels.iloc[train_indexes] == "RG"]
                     np.random.shuffle(class_0_indexes)
                     class_0_indexes_to_keep = class_0_indexes[:count_class_1]
 
                     # Combine class 1 indexes with selected class 0 indexes
-                    train_indexes = list(
-                        set(train_indexes) & set(class_0_indexes_to_keep))
+                    # Merge class_1_indexes and class_0_indexes_to_keep
+                    merged_indexes = np.concatenate(
+                        [class_1_indexes, class_0_indexes[:count_class_1]])
 
-                    train_input_data = input_data[train_indexes].tolist()
-                    train_label_data = labels[train_indexes].tolist()
+                    # Shuffle the merged indexes
+                    np.random.shuffle(merged_indexes)
+
+                    train_input_data = input_data[merged_indexes].tolist()
+                    train_label_data = labels[merged_indexes].tolist()
 
                     val_input_data = input_data[val_indexes].tolist()
                     val_label_data = labels[val_indexes].tolist()
 
-                    # Compute class weights for WeightedRandomSampler
-                    class_weights = compute_class_weight('balanced', classes=np.unique(
-                        labels[train_indexes]), y=labels[train_indexes])
-                    class_weights = torch.FloatTensor(class_weights)
-
-                    # Create a WeightedRandomSampler
-                    self.sampler = WeightedRandomSampler(
-                        class_weights, len(class_weights), replacement=True)
                     self.data_train = IsbiDataSet(
                         train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
