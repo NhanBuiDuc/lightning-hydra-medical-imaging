@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import torch
 from lightning import LightningDataModule
-from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, WeightedRandomSampler
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split, WeightedRandomSampler, BatchSampler
 from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 import os
@@ -153,22 +153,52 @@ class IsbiDataModule(LightningDataModule):
                     train_indexes, val_indexes = all_splits[k]
 
                     # Count the number of samples in class 1 in the training set
-                    count_class_1 = (labels.iloc[train_indexes] == 'RG').sum()
-                    count_class_0 = (labels.iloc[train_indexes] == 'NRG').sum()
+                    train_count_class_1 = (
+                        labels.iloc[train_indexes] == 'RG').sum()
+                    train_count_class_0 = (
+                        labels.iloc[train_indexes] == 'NRG').sum()
+                    val_count_class_1 = (
+                        labels.iloc[val_indexes] == 'RG').sum()
+                    val_count_class_0 = (
+                        labels.iloc[val_indexes] == 'NRG').sum()
                     # Remove samples of class 0 until it equals the count of class 1
-                    class_0_indexes = train_indexes[labels.iloc[train_indexes] == "NRG"]
-                    class_1_indexes = train_indexes[labels.iloc[train_indexes] == "RG"]
-                    np.random.shuffle(class_0_indexes)
-                    class_0_indexes_to_keep = class_0_indexes[:count_class_1]
+                    train_class_0_indexes = train_indexes[labels.iloc[train_indexes] == "NRG"]
+                    train_class_1_indexes = train_indexes[labels.iloc[train_indexes] == "RG"]
+
+                    np.random.shuffle(train_class_0_indexes)
+
+                    class_0_indexes_to_keep = train_class_0_indexes[:train_count_class_1]
 
                     # Combine class 1 indexes with selected class 0 indexes
                     # Merge class_1_indexes and class_0_indexes_to_keep
                     merged_indexes = np.concatenate(
-                        [class_1_indexes, class_0_indexes[:count_class_1]])
+                        [train_class_1_indexes, class_0_indexes_to_keep])
 
                     # Shuffle the merged indexes
                     np.random.shuffle(merged_indexes)
-
+                    # Assuming you want equal samples from each class in a batch
+                    train_num_samples_per_class = train_count_class_1 // 2
+                    self.train_balanced_batch_sampler = BatchSampler(
+                        WeightedRandomSampler(
+                            torch.ones(len(train_class_1_indexes)), train_num_samples_per_class, replacement=True
+                        ),
+                        WeightedRandomSampler(
+                            torch.ones(len(train_class_1_indexes)), train_num_samples_per_class, replacement=True
+                        ),
+                        batch_size=self.batch_size,
+                        drop_last=True,
+                    )
+                    val_num_samples_per_class = val_count_class_1 // 2
+                    self.val_balanced_batch_sampler = BatchSampler(
+                        WeightedRandomSampler(
+                            torch.ones(len(train_class_1_indexes)), val_num_samples_per_class, replacement=True
+                        ),
+                        WeightedRandomSampler(
+                            torch.ones(len(train_class_1_indexes)), val_num_samples_per_class, replacement=True
+                        ),
+                        batch_size=self.batch_size,
+                        drop_last=True,
+                    )
                     train_input_data = input_data[merged_indexes].tolist()
                     train_label_data = labels[merged_indexes].tolist()
 
@@ -194,7 +224,8 @@ class IsbiDataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            persistent_workers=True
+            persistent_workers=True,
+            batch_sampler=self.train_balanced_batch_sampler
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -202,8 +233,7 @@ class IsbiDataModule(LightningDataModule):
 
         :return: The validation dataloader.
         """
-        sampler = WeightedRandomSampler(
-            weights=[0.5, 0.5], num_samples=self.batch_size)
+
         return DataLoader(
             dataset=self.data_val,
             batch_size=self.batch_size_per_device,
