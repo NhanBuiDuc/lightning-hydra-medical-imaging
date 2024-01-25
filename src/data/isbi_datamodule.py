@@ -76,7 +76,7 @@ class IsbiDataModule(LightningDataModule):
             self.data_dir, "ISBI_2024", "JustRAIGS_Train_labels.csv")
         self.train_gt_path = self.train_gt_path.replace("\\", "/")
 
-        self.binary_unbalance_train_ratio = 110
+        self.binary_unbalance_train_ratio = binary_unbalance_train_ratio
 
     @property
     def num_classes(self) -> int:
