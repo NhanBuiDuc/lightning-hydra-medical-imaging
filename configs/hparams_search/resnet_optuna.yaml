@@ -49,6 +49,7 @@ hydra:
       model.criterion: choice("focal", "entropy")
       data.batch_size: choice(32)
       data.image_size: choice(448, 512)
+      data.binary_unbalance_train_ratio: choice(100, 150, 200)
       data.kfold_seed: choice(111, 222, 333, 444, 555)
       # model.net.version: choice("resnet18", "resnet34", "resnet50", "resnet101", "resnet152")
       model.net.version: choice("resnet50", "resnet101")
