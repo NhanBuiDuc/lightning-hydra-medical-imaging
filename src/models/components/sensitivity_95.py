@@ -45,6 +45,6 @@ class Sensitivity(Metric):
             sensitivity_at_desired_specificity = tpr[idx]
             sensitivity_at_desired_specificity = sensitivity_at_desired_specificity.clone(
             ).detach().requires_grad_(False).to(dtype=torch.float32, device=self.device)
-            return sensitivity_at_desired_specificity, torch.FloatTensor(threshold_at_desired_specificity)
+            return sensitivity_at_desired_specificity, torch.FloatTensor(threshold_at_desired_specificity, dtype=float, device="cpu", layout="Strided")
         else:
             return None, None
