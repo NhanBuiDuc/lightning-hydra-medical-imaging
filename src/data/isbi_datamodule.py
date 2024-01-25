@@ -196,8 +196,7 @@ class IsbiDataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            persistent_workers=True,
-            sampler=sampler
+            persistent_workers=True
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -213,8 +212,7 @@ class IsbiDataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            persistent_workers=True,
-            sampler=sampler
+            persistent_workers=True
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
