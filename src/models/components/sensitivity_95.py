@@ -2,7 +2,7 @@ from torchmetrics import Metric
 import torch
 from torch import Tensor
 from torchmetrics.utilities import dim_zero_cat
-from torchmetrics import ROC
+from torchmetrics import ROC, AUROC
 import numpy as np
 
 
@@ -13,6 +13,7 @@ class Sensitivity(Metric):
         self.add_state("target", default=[], dist_reduce_fx="cat")
         self.desired_specificity = desired_specificity
         self.roc = ROC(task=task)
+        self.auroc = AUROC(task=task)
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         self.preds.append(preds)
@@ -37,14 +38,14 @@ class Sensitivity(Metric):
             # fpr = np.squeeze(preds)
             # Find the index of the threshold that is closest to the desired specificity
             idx = np.argmax(fpr >= (1 - self.desired_specificity))
-
+            self.roc_auc = self.auroc(preds, target)
             # Get the corresponding threshold
-            threshold_at_desired_specificity = thresholds[idx]
+            self.threshold_at_desired_specificity = thresholds[idx]
 
             # Get the corresponding TPR (sensitivity)
             sensitivity_at_desired_specificity = tpr[idx]
             sensitivity_at_desired_specificity = sensitivity_at_desired_specificity.clone(
             ).detach().requires_grad_(False).to(dtype=torch.float32, device=self.device)
-            return sensitivity_at_desired_specificity, torch.FloatTensor(threshold_at_desired_specificity, dtype=torch.float32)
+            return sensitivity_at_desired_specificity
         else:
             return None, None

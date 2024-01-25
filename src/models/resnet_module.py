@@ -245,7 +245,9 @@ class ResnetModule(LightningModule):
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
-        val_sensitivity, thresh_hold = self.val_sensitivity_95.compute()
+        val_sensitivity = self.val_sensitivity_95.compute()
+        thresh_hold = self.val_sensitivity_95.threshold_at_desired_specificity
+        roc_auc = self.val_sensitivity_95.roc_auc
         # update best so far val acc
         self.val_sensitivity_95_best(val_sensitivity)
         self.thresh_hold_record = thresh_hold
@@ -266,6 +268,8 @@ class ResnetModule(LightningModule):
         self.log("val/sensitivity_95_best", self.val_sensitivity_95_best.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/thresh_hold_record", self.thresh_hold_record,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/Area Under the Receiver Operating Characteristic curve", roc_auc,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
