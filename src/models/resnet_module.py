@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import pandas as pd
 from .components.focal_loss import FocalLoss, BinaryFocalLoss
-from .components.specificity_95 import Specificity
+from .components.sensitivity_95 import Sensitivity
 
 
 class ResnetModule(LightningModule):
@@ -111,9 +111,9 @@ class ResnetModule(LightningModule):
         # for tracking best so far validation F1
         # self.val_acc_best = MaxMetric()
         # self.val_f1_best = MaxMetric()
-        # self.train_specificity_95 = Specificity(0.95)
-        self.val_specificity_95 = Specificity(0.95)
-        self.val_specificity_95_best = MaxMetric()
+        # self.train_sensitivity_95 = sensitivity(0.95)
+        self.val_sensitivity_95 = Sensitivity(0.95)
+        self.val_sensitivity_95_best = MaxMetric()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
@@ -134,10 +134,10 @@ class ResnetModule(LightningModule):
         self.train_precision.reset()
         self.train_acc.reset()
         # self.train_confusion_matrix.reset()
-        # self.train_specificity_95.reset()
+        # self.train_sensitivity_95.reset()
 
-        self.val_specificity_95.reset()
-        self.val_specificity_95_best.reset()
+        self.val_sensitivity_95.reset()
+        self.val_sensitivity_95_best.reset()
         self.val_loss.reset()
         self.val_recall.reset()
         self.val_precision.reset()
@@ -201,8 +201,6 @@ class ResnetModule(LightningModule):
         self.train_f1(preds, targets)
         self.train_recall(preds, targets)
         self.train_precision(preds, targets)
-        # self.train_specificity_95(preds, targets)
-        # self.train_confusion_matrix(preds, targets)
 
         self.log("train/loss", self.train_loss,
                  on_step=True, on_epoch=False, prog_bar=True, logger=True)
@@ -225,7 +223,7 @@ class ResnetModule(LightningModule):
         self.train_f1.reset()
         self.train_recall.reset()
         self.train_precision.reset()
-        # self.train_specificity_95.reset()
+        # self.train_sensitivity_95.reset()
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single validation step on a batch of data from the validation set.
@@ -242,14 +240,14 @@ class ResnetModule(LightningModule):
         self.val_f1(preds, targets)
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
-        self.val_specificity_95(preds, targets)
+        self.val_sensitivity_95(preds, targets)
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
-        val_specificity = self.val_specificity_95.compute()
+        val_sensitivity, thresh_hold = self.val_sensitivity_95.compute()
         # update best so far val acc
-        self.val_specificity_95_best(val_specificity)
+        self.val_sensitivity_95_best(val_sensitivity)
 
         self.log("val/loss", self.val_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
@@ -261,16 +259,18 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/specificity_95", self.val_specificity_95.compute(),
+        self.log("val/sensitivity_95", self.val_sensitivity_95,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/specificity_95_best", self.val_specificity_95_best.compute(),
+        self.log("val/thresh_hold at 95 specificity: ", thresh_hold,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/sensitivity_95_best", self.val_sensitivity_95_best.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         # self.log("val/f1_best", self.val_f1_best.compute(),
         #          sync_dist=True, prog_bar=True)
 
-        # self.val_specificity_95.reset()
+        # self.val_sensitivity_95.reset()
         # self.val_loss.reset()
         # self.val_recall.reset()
         # self.val_f1.reset()

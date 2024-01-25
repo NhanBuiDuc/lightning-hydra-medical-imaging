@@ -28,7 +28,7 @@ class IsbiDataModule(LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
         is_transform=True,
-        balance_data=True
+        balance_data=True,
     ) -> None:
         """Initialize a `IsicDataModule`.
 
@@ -74,6 +74,8 @@ class IsbiDataModule(LightningDataModule):
         self.train_gt_path = os.path.join(
             self.data_dir, "ISBI_2024", "JustRAIGS_Train_labels.csv")
         self.train_gt_path = self.train_gt_path.replace("\\", "/")
+
+        self.binary_unbalance_train_ratio = 110
 
     @property
     def num_classes(self) -> int:
@@ -167,7 +169,8 @@ class IsbiDataModule(LightningDataModule):
 
                     np.random.shuffle(train_class_0_indexes)
 
-                    class_0_indexes_to_keep = train_class_0_indexes[:train_count_class_1]
+                    class_0_indexes_to_keep = train_class_0_indexes[: (
+                        train_count_class_1 * (self.binary_unbalance_train_ratio / 100))]
 
                     # Combine class 1 indexes with selected class 0 indexes
                     # Merge class_1_indexes and class_0_indexes_to_keep

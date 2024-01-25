@@ -6,7 +6,7 @@ from torchmetrics import ROC
 import numpy as np
 
 
-class Specificity(Metric):
+class Sensitivity(Metric):
     def __init__(self, desired_specificity=0.95, task="binary", ** kwargs):
         super().__init__(**kwargs)
         self.add_state("preds", default=[], dist_reduce_fx="cat")
@@ -47,4 +47,4 @@ class Specificity(Metric):
             ).detach().requires_grad_(False).to(dtype=torch.float32, device=self.device)
             return sensitivity_at_desired_specificity
         else:
-            return torch.zeros(1, dtype=torch.int64, device=self.device)
+            return torch.zeros(1, dtype=torch.int64, device=self.device), torch.tensor(threshold_at_desired_specificity)
