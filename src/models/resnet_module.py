@@ -248,7 +248,7 @@ class ResnetModule(LightningModule):
         val_sensitivity, thresh_hold = self.val_sensitivity_95.compute()
         # update best so far val acc
         self.val_sensitivity_95_best(val_sensitivity)
-
+        self.thresh_hold_record = thresh_hold
         self.log("val/loss", self.val_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/acc", self.val_acc.compute(), on_step=False,
@@ -264,6 +264,8 @@ class ResnetModule(LightningModule):
         self.log("val/thresh_hold at 95 specificity: ", thresh_hold,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/sensitivity_95_best", self.val_sensitivity_95_best.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/thresh_hold_record", self.thresh_hold_record,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
