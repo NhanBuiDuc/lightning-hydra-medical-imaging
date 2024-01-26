@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import pandas as pd
 from .components.focal_loss import FocalLoss, BinaryFocalLoss
 from .components.sensitivity_95 import Sensitivity
+from torchmetrics import ROC, AUROC
 
 
 class ResnetModule(LightningModule):
@@ -114,6 +115,7 @@ class ResnetModule(LightningModule):
         # self.train_sensitivity_95 = sensitivity(0.95)
         self.val_sensitivity_95 = Sensitivity(0.95)
         self.val_sensitivity_95_best = MaxMetric()
+        self.pred_target_list = []
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
@@ -244,6 +246,7 @@ class ResnetModule(LightningModule):
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
         self.val_sensitivity_95(logits, targets)
+        self.pred_target_list.append({"preds": preds, "target": targets})
 
     def on_validation_epoch_start(self) -> None:
         self.val_loss.reset()
@@ -283,14 +286,14 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/area Under the Receiver Operating Characteristic curve", roc_auc,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/number of label 1 samples", (self.val_sensitivity_95.preds == 1).sum().item(),
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/number of label 0 samples", (self.val_sensitivity_95.preds == 0).sum().item(),
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         # self.log("val/f1_best", self.val_f1_best.compute(),
         #          sync_dist=True, prog_bar=True)
+        for item in self.pred_target_list:
+            preds = item["preds"]
+            target = item["target"]
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
