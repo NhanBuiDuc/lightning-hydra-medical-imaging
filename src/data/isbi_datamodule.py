@@ -187,17 +187,27 @@ class IsbiDataModule(LightningDataModule):
                     val_input_data = input_data[val_indexes].tolist()
                     val_label_data = labels[val_indexes].tolist()
                     # Transform labels into numerical format (0 or 1)
-                    # Assuming 'RG' is positive class (1) and 'NRG' is negative class (0)
-                    val_labels_numeric = (val_label_data == 'RG').astype(int)
+                    val_class_distribution = {
+                        item: 0 for item in self.class_name}
 
-                    # Calculate class weights based on the transformed labels
-                    class_count_val = [val_labels_numeric.eq(
-                        i).sum().item() for i in range(2)]  # Assuming 2 classes
-                    class_weights_val = 1. / \
-                        torch.tensor(class_count_val, dtype=torch.float)
+                    for item in val_label_data:
+                        val_class_distribution[item] += 1
+                    # Convert class_distribution to a list of counts in the order of class_name
+                    val_class_counts = [val_class_distribution[self.class_name[i]]
+                                        for i in range(len(self.class_name))]
+
+                    # Calculate class weights
+                    val_class_weights = 1. / \
+                        torch.tensor(val_class_counts, dtype=torch.float)
+
+                    # Map class labels to indices
+                    val_class_to_index = {
+                        self.class_name[i]: i for i in range(len(self.class_name))}
+                    val_label_indices = [val_class_to_index[label]
+                                         for label in val_label_data]
 
                     # Assign weights to each sample in the validation set
-                    val_weights = class_weights_val[val_labels_numeric]
+                    val_weights = val_class_weights[val_label_indices]
 
                     # Assuming you have WeightedRandomSampler, you can use it like this:
                     self.weighted_sampler_val = WeightedRandomSampler(
