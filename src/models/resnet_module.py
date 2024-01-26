@@ -242,6 +242,15 @@ class ResnetModule(LightningModule):
         self.val_precision(preds, targets)
         self.val_sensitivity_95(preds, targets)
 
+    def on_validation_epoch_start(self) -> None:
+        self.val_loss.reset()
+        self.val_acc.reset()
+        self.val_f1.reset()
+        self.val_recall.reset()
+        self.val_precision.reset()
+        self.val_sensitivity_95.reset()
+        self.val_sensitivity_95_best.reset()
+
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
@@ -275,14 +284,6 @@ class ResnetModule(LightningModule):
         # otherwise metric would be reset by lightning after each epoch
         # self.log("val/f1_best", self.val_f1_best.compute(),
         #          sync_dist=True, prog_bar=True)
-
-        self.val_loss.reset()
-        self.val_acc.reset()
-        self.val_f1.reset()
-        self.val_recall.reset()
-        self.val_precision.reset()
-        self.val_sensitivity_95.reset()
-        self.val_sensitivity_95_best.reset()
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
