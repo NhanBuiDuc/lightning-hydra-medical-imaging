@@ -116,29 +116,77 @@ class IsbiDataModule(LightningDataModule):
             if not self.balance_data:
                 input_data = self.train_gt_pdf['Eye ID']
                 labels = self.train_gt_pdf['Final Label']
-                # choose fold to train on
+                # Choose fold to train on
                 kf = StratifiedKFold(n_splits=len(self.kfold_seed_list),
                                      shuffle=True, random_state=self.kfold_seed)
-                all_splits = [k for k in kf.split(
-                    input_data, labels)]
+                all_splits = [k for k in kf.split(input_data, labels)]
                 k = self.kfold_seed_list.index(self.kfold_seed)
                 train_indexes, val_indexes = all_splits[k]
-                train_indexes, val_indexes = train_indexes.tolist(), val_indexes.tolist()
 
-                train_input_data = input_data[train_indexes].tolist()
-                train_label_data = labels[train_indexes].tolist()
+                # Count the number of samples in class 1 in the training set
+                train_input_data = input_data[merged_indexes].tolist()
+                train_label_data = labels[merged_indexes].tolist()
 
                 val_input_data = input_data[val_indexes].tolist()
                 val_label_data = labels[val_indexes].tolist()
 
-                # Compute class weights for WeightedRandomSampler
-                class_weights = compute_class_weight('balanced', classes=np.unique(
-                    labels[train_indexes]), y=labels[train_indexes])
-                class_weights = torch.FloatTensor(class_weights)
+                # Train sampler
+                train_class_distribution = {
+                    item: 0 for item in self.class_name}
 
-                # Create a WeightedRandomSampler
-                self.sampler = WeightedRandomSampler(
-                    class_weights, len(class_weights), replacement=True)
+                for item in val_label_data:
+                    train_class_distribution[item] += 1
+                # Convert class_distribution to a list of counts in the order of class_name
+                train_class_counts = [train_class_distribution[self.class_name[i]]
+                                      for i in range(len(self.class_name))]
+
+                # Calculate class weights
+                train_class_weights = 1. / \
+                    torch.tensor(train_class_counts, dtype=torch.float)
+
+                # Map class labels to indices
+                train_class_to_index = {
+                    self.class_name[i]: i for i in range(len(self.class_name))}
+                train_label_indices = [train_class_to_index[label]
+                                       for label in train_label_data]
+
+                # Assign weights to each sample in the validation set
+                train_weights = train_class_weights[train_label_indices]
+
+                # Assuming you have WeightedRandomSampler, you can use it like this:
+                self.weighted_sampler_val = WeightedRandomSampler(
+                    weights=train_weights.tolist(),
+                    num_samples=self.batch_size
+                )
+                # Transform labels into numerical format (0 or 1)
+                val_class_distribution = {
+                    item: 0 for item in self.class_name}
+
+                for item in val_label_data:
+                    val_class_distribution[item] += 1
+                # Convert class_distribution to a list of counts in the order of class_name
+                val_class_counts = [val_class_distribution[self.class_name[i]]
+                                    for i in range(len(self.class_name))]
+
+                # Calculate class weights
+                val_class_weights = 1. / \
+                    torch.tensor(val_class_counts, dtype=torch.float)
+
+                # Map class labels to indices
+                val_class_to_index = {
+                    self.class_name[i]: i for i in range(len(self.class_name))}
+                val_label_indices = [val_class_to_index[label]
+                                     for label in val_label_data]
+
+                # Assign weights to each sample in the validation set
+                val_weights = val_class_weights[val_label_indices]
+
+                # Assuming you have WeightedRandomSampler, you can use it like this:
+                self.weighted_sampler_val = WeightedRandomSampler(
+                    weights=val_weights.tolist(),
+                    num_samples=self.batch_size
+                )
+
                 self.data_train = IsbiDataSet(
                     train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
