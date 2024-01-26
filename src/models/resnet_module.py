@@ -301,12 +301,25 @@ class ResnetModule(LightningModule):
         targets = merged_targets.detach().cpu().numpy()
         # Compute the ROC curve
         fpr, tpr, thresholds = roc_curve(targets, preds)
+        # Desired specificity
+        desired_specificity = 0.95
+
+        # Find the index of the threshold that is closest to the desired specificity
+        idx = np.argmax(fpr >= (1 - desired_specificity))
+
+        # Get the corresponding threshold
+        threshold_at_desired_specificity = thresholds[idx]
+
+        # Get the corresponding TPR (sensitivity)
+        sensitivity_at_desired_specificity = tpr[idx]
 
         # Calculate the AUC (Area Under the Curve)
         roc_auc = auc(fpr, tpr)
+        self.log("val/sensitivity_at_desired_specificity", roc_auc,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/roc_auc", roc_auc,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/thresholds", thresholds,
+        self.log("val/thresholds", threshold_at_desired_specificity,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
