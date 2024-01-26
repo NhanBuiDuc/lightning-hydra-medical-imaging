@@ -179,7 +179,7 @@ class ResnetModule(LightningModule):
                 # preds = preds.view(preds.shape[0], 1)
                 threshold = 0.5
                 binary_predictions = (logits >= threshold).float()
-                return loss, binary_predictions, y
+                return loss, logits, binary_predictions, y
         else:
             return None, None, None
 
@@ -193,7 +193,7 @@ class ResnetModule(LightningModule):
         :param batch_idx: The index of the current batch.
         :return: A tensor of losses between model predictions and targets.
         """
-        loss, preds, targets = self.model_step(batch)
+        loss, logits, preds, targets = self.model_step(batch)
 
         # update and log metrics
         self.train_loss(loss)
@@ -225,6 +225,9 @@ class ResnetModule(LightningModule):
         self.train_precision.reset()
         # self.train_sensitivity_95.reset()
 
+    def on_after_batch_transfer(self, batch: Any, dataloader_idx: int) -> Any:
+        return super().on_after_batch_transfer(batch, dataloader_idx)
+
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single validation step on a batch of data from the validation set.
 
@@ -232,7 +235,7 @@ class ResnetModule(LightningModule):
             labels.
         :param batch_idx: The index of the current batch.
         """
-        loss, preds, targets = self.model_step(batch)
+        loss, logits, preds, targets = self.model_step(batch)
 
         # update and log metrics
         self.val_loss(loss)
@@ -240,7 +243,7 @@ class ResnetModule(LightningModule):
         self.val_f1(preds, targets)
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
-        self.val_sensitivity_95(preds, targets)
+        self.val_sensitivity_95(logits, targets)
 
     def on_validation_epoch_start(self) -> None:
         self.val_loss.reset()
@@ -278,7 +281,7 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/thresh_hold_record", self.thresh_hold_record,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/Area Under the Receiver Operating Characteristic curve", roc_auc,
+        self.log("val/area Under the Receiver Operating Characteristic curve", roc_auc,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
