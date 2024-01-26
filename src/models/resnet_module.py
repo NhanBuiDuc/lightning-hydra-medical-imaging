@@ -295,8 +295,8 @@ class ResnetModule(LightningModule):
         # self.log("val/f1_best", self.val_f1_best.compute(),
         #          sync_dist=True, prog_bar=True)
 
-        merged_preds = torch.cat([self.pred_list], dim=0)
-        merged_targets = torch.cat([self.target_list], dim=0)
+        merged_preds = torch.cat(self.pred_list, dim=0)
+        merged_targets = torch.cat(self.target_list, dim=0)
         preds = merged_preds.detach().cpu().numpy()
         targets = merged_targets.detach().cpu().numpy()
         # Compute the ROC curve
