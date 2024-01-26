@@ -48,4 +48,4 @@ class Sensitivity(Metric):
             ).detach().requires_grad_(False).to(dtype=torch.float32, device=self.device)
             return sensitivity_at_desired_specificity
         else:
-            return torch.tensor(-1), torch.tensor(-1)
+            return torch.tensor(data=(-1), dtype=torch.float32, device=self.device), torch.tensor((-1), dtype=torch.float32, device=self.device)
