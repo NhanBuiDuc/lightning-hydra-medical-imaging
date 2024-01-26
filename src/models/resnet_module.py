@@ -283,6 +283,10 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/area Under the Receiver Operating Characteristic curve", roc_auc,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/number of label 1 samples", (self.val_sensitivity_95.preds == 1).sum().item(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/number of label 0 samples", (self.val_sensitivity_95.preds == 0).sum().item(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         # self.log("val/f1_best", self.val_f1_best.compute(),
