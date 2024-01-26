@@ -297,6 +297,17 @@ class ResnetModule(LightningModule):
 
         merged_preds = torch.cat([self.pred_list], dim=0)
         merged_targets = torch.cat([self.target_list], dim=0)
+        preds = merged_preds.detach().cpu().numpy()
+        targets = merged_targets.detach().cpu().numpy()
+        # Compute the ROC curve
+        fpr, tpr, thresholds = roc_curve(targets, preds)
+
+        # Calculate the AUC (Area Under the Curve)
+        roc_auc = auc(fpr, tpr)
+        self.log("val/roc_auc", roc_auc,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/thresholds", thresholds,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
