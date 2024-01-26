@@ -186,7 +186,25 @@ class IsbiDataModule(LightningDataModule):
 
                     val_input_data = input_data[val_indexes].tolist()
                     val_label_data = labels[val_indexes].tolist()
+                    # Transform labels into numerical format (0 or 1)
+                    # Assuming 'RG' is positive class (1) and 'NRG' is negative class (0)
+                    val_labels_numeric = (val_label_data == 'RG').astype(int)
 
+                    # Calculate class weights based on the transformed labels
+                    class_count_val = [val_labels_numeric.eq(
+                        i).sum().item() for i in range(2)]  # Assuming 2 classes
+                    class_weights_val = 1. / \
+                        torch.tensor(class_count_val, dtype=torch.float)
+
+                    # Assign weights to each sample in the validation set
+                    val_weights = class_weights_val[val_labels_numeric]
+
+                    # Assuming you have WeightedRandomSampler, you can use it like this:
+                    self.weighted_sampler_val = WeightedRandomSampler(
+                        weights=val_weights.tolist(),
+                        num_samples=len(val_weights),
+                        replacement=True
+                    )
                     self.data_train = IsbiDataSet(
                         train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
 
@@ -221,7 +239,8 @@ class IsbiDataModule(LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            persistent_workers=True
+            persistent_workers=True,
+            sampler=self.weighted_sampler_val
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
