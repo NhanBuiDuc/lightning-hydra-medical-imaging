@@ -154,10 +154,11 @@ class IsbiDataModule(LightningDataModule):
                 train_weights = train_class_weights[train_label_indices]
 
                 # Assuming you have WeightedRandomSampler, you can use it like this:
-                self.weighted_sampler_val = WeightedRandomSampler(
+                self.weighted_sampler_train = WeightedRandomSampler(
                     weights=train_weights.tolist(),
                     num_samples=self.batch_size
                 )
+                # Val sampler
                 # Transform labels into numerical format (0 or 1)
                 val_class_distribution = {
                     item: 0 for item in self.class_name}
@@ -273,16 +274,25 @@ class IsbiDataModule(LightningDataModule):
 
         :return: The train dataloader.
         """
-        sampler = WeightedRandomSampler(
-            weights=[0.5, 0.5], num_samples=self.batch_size)
-        return DataLoader(
-            dataset=self.data_train,
-            batch_size=self.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
-            shuffle=False,
-            persistent_workers=True
-        )
+        if self.balance_data:
+            return DataLoader(
+                dataset=self.data_train,
+                batch_size=self.batch_size,
+                num_workers=self.hparams.num_workers,
+                pin_memory=self.hparams.pin_memory,
+                shuffle=False,
+                persistent_workers=True
+            )
+        else:
+            return DataLoader(
+                dataset=self.data_train,
+                batch_size=self.batch_size,
+                num_workers=self.hparams.num_workers,
+                pin_memory=self.hparams.pin_memory,
+                shuffle=False,
+                persistent_workers=True,
+                sampler=self.weighted_sampler_train
+            )
 
     def val_dataloader(self) -> DataLoader[Any]:
         """Create and return the validation dataloader.
