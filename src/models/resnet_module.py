@@ -276,12 +276,13 @@ class ResnetModule(LightningModule):
         # self.log("val/f1_best", self.val_f1_best.compute(),
         #          sync_dist=True, prog_bar=True)
 
-        # self.val_sensitivity_95.reset()
-        # self.val_loss.reset()
-        # self.val_recall.reset()
-        # self.val_f1.reset()
-        # self.val_precision.reset()
-        # self.val_acc.reset()
+        self.val_loss.reset()
+        self.val_acc.reset()
+        self.val_f1.reset()
+        self.val_recall.reset()
+        self.val_precision.reset()
+        self.val_sensitivity_95.reset()
+        self.val_sensitivity_95_best.reset()
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
