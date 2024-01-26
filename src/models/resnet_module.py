@@ -248,8 +248,8 @@ class ResnetModule(LightningModule):
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
         self.val_sensitivity_95(logits, targets)
-        self.pred_list(logits)
-        self.pred_list(targets)
+        self.pred_list.append(logits)
+        self.target_list.append(targets)
 
     def on_validation_epoch_start(self) -> None:
         self.val_loss.reset()
