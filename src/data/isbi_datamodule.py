@@ -124,8 +124,8 @@ class IsbiDataModule(LightningDataModule):
                 train_indexes, val_indexes = all_splits[k]
 
                 # Count the number of samples in class 1 in the training set
-                train_input_data = input_data[merged_indexes].tolist()
-                train_label_data = labels[merged_indexes].tolist()
+                train_input_data = input_data[train_indexes].tolist()
+                train_label_data = labels[train_indexes].tolist()
 
                 val_input_data = input_data[val_indexes].tolist()
                 val_label_data = labels[val_indexes].tolist()
