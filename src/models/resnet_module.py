@@ -261,6 +261,8 @@ class ResnetModule(LightningModule):
         self.val_recall.reset()
         self.val_precision.reset()
         self.val_sensitivity_best.reset()
+        self.pred_list = []
+        self.target_list = []
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
