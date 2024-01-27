@@ -261,8 +261,6 @@ class ResnetModule(LightningModule):
         self.val_recall.reset()
         self.val_precision.reset()
         self.val_sensitivity_best.reset()
-        self.pred_list = []
-        self.target_list = []
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
@@ -341,6 +339,8 @@ class ResnetModule(LightningModule):
         # otherwise metric would be reset by lightning after each epoch
         # self.log("val/f1_best", self.val_f1_best.compute(),
         #          sync_dist=True, prog_bar=True)
+        self.pred_list = []
+        self.target_list = []
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
