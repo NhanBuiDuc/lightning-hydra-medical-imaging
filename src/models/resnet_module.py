@@ -260,7 +260,7 @@ class ResnetModule(LightningModule):
         self.val_f1.reset()
         self.val_recall.reset()
         self.val_precision.reset()
-        self.val_sensitivity_95_best.reset()
+        self.val_sensitivity_best.reset()
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
@@ -335,9 +335,6 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/precision", self.val_precision.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/sensitivity_95", self.val_sensitivity_95,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         # self.log("val/f1_best", self.val_f1_best.compute(),
