@@ -114,10 +114,14 @@ class ResnetModule(LightningModule):
         # self.val_acc_best = MaxMetric()
         # self.val_f1_best = MaxMetric()
         # self.train_sensitivity_95 = sensitivity(0.95)
-        self.val_sensitivity_95 = Sensitivity(0.95)
-        self.val_sensitivity_95_best = MaxMetric()
+        # self.val_sensitivity_95 = Sensitivity(0.95)
+        self.val_sensitivity_best = MaxMetric()
         self.pred_list = []
         self.target_list = []
+        self.best_sensitivity = 0
+        self.thresh_hold_at_best_sensitivity = 0
+        self.auc_at_best_sensitivity = 0
+        self.desired_specificity = 0.95
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
@@ -140,8 +144,9 @@ class ResnetModule(LightningModule):
         # self.train_confusion_matrix.reset()
         # self.train_sensitivity_95.reset()
 
-        self.val_sensitivity_95.reset()
-        self.val_sensitivity_95_best.reset()
+        # self.val_sensitivity_95.reset()
+        self.val_sensitivity_best.reset()
+        self.val_sensitivity_best(0)
         self.val_loss.reset()
         self.val_recall.reset()
         self.val_precision.reset()
@@ -153,7 +158,6 @@ class ResnetModule(LightningModule):
         self, batch: Tuple[torch.Tensor, torch.Tensor]
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Perform a single model step on a batch of data.
-
         :param batch: A batch of data (a tuple) containing the input tensor of images and target labels.
 
         :return: A tuple containing (in order):
@@ -247,7 +251,6 @@ class ResnetModule(LightningModule):
         self.val_f1(preds, targets)
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
-        self.val_sensitivity_95(logits, targets)
         self.pred_list.append(logits)
         self.target_list.append(targets)
 
@@ -257,18 +260,71 @@ class ResnetModule(LightningModule):
         self.val_f1.reset()
         self.val_recall.reset()
         self.val_precision.reset()
-        self.val_sensitivity_95.reset()
         self.val_sensitivity_95_best.reset()
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
-        val_sensitivity = self.val_sensitivity_95.compute()
-        thresh_hold = self.val_sensitivity_95.threshold_at_desired_specificity
-        roc_auc = self.val_sensitivity_95.roc_auc
         # update best so far val acc
-        self.val_sensitivity_95_best(val_sensitivity)
-        self.thresh_hold_record = thresh_hold
+
+        merged_preds = torch.cat(self.pred_list, dim=0)
+        merged_targets = torch.cat(self.target_list, dim=0)
+        preds = merged_preds.detach().cpu().numpy()
+        targets = merged_targets.detach().cpu().numpy()
+        # Compute the ROC curve
+        fpr, tpr, thresholds = roc_curve(targets, preds)
+        # Desired specificity
+
+        # Find the index of the threshold that is closest to the desired specificity
+        idx = np.argmax(fpr >= (1 - self.desired_specificity))
+
+        # Get the corresponding threshold
+        threshold_at_desired_specificity = thresholds[idx]
+
+        # Get the corresponding TPR (sensitivity)
+        sensitivity_at_desired_specificity = tpr[idx]
+
+        # Calculate the AUC (Area Under the Curve)
+        roc_auc = auc(fpr, tpr)
+
+        target_count_zeros = np.count_nonzero(targets == 0)
+        target_count_ones = np.count_nonzero(targets == 1)
+
+        pred_count_zeros = np.count_nonzero(preds == 0)
+        pred_count_ones = np.count_nonzero(preds == 1)
+
+        self.log("val/target_count_zeros", target_count_zeros,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/target_count_ones", target_count_ones,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/pred_count_zeros", pred_count_zeros,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/pred_count_zeros", pred_count_ones,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
+        self.log("val/sensitivity", sensitivity_at_desired_specificity,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/roc_auc", roc_auc,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/threshold", threshold_at_desired_specificity,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/length", len(merged_targets),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        current_best_sensitivity = self.val_sensitivity_best.compute()
+
+        if sensitivity_at_desired_specificity > current_best_sensitivity:
+            self.best_sensitivity = sensitivity_at_desired_specificity
+            self.auc_at_best_sensitivity = roc_auc
+            self.thresh_hold_at_best_sensitivity = threshold_at_desired_specificity
+            self.val_sensitivity_best(sensitivity_at_desired_specificity)
+
+        self.log("val/sensitivity_best", self.val_sensitivity_best.compute(),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/roc_auc_best", self.auc_at_best_sensitivity,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/thresh_hold_best", self.thresh_hold_at_best_sensitivity,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
         self.log("val/loss", self.val_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/acc", self.val_acc.compute(), on_step=False,
@@ -281,48 +337,11 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/sensitivity_95", self.val_sensitivity_95,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/thresh_hold at 95 specificity: ", thresh_hold,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/sensitivity_95_best", self.val_sensitivity_95_best.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/thresh_hold_record", self.thresh_hold_record,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/area Under the Receiver Operating Characteristic curve", roc_auc,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         # self.log("val/f1_best", self.val_f1_best.compute(),
         #          sync_dist=True, prog_bar=True)
-
-        merged_preds = torch.cat(self.pred_list, dim=0)
-        merged_targets = torch.cat(self.target_list, dim=0)
-        preds = merged_preds.detach().cpu().numpy()
-        targets = merged_targets.detach().cpu().numpy()
-        # Compute the ROC curve
-        fpr, tpr, thresholds = roc_curve(targets, preds)
-        # Desired specificity
-        desired_specificity = 0.95
-
-        # Find the index of the threshold that is closest to the desired specificity
-        idx = np.argmax(fpr >= (1 - desired_specificity))
-
-        # Get the corresponding threshold
-        threshold_at_desired_specificity = thresholds[idx]
-
-        # Get the corresponding TPR (sensitivity)
-        sensitivity_at_desired_specificity = tpr[idx]
-
-        # Calculate the AUC (Area Under the Curve)
-        roc_auc = auc(fpr, tpr)
-        self.log("val/sensitivity_at_desired_specificity", sensitivity_at_desired_specificity,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/roc_auc", roc_auc,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/thresholds", threshold_at_desired_specificity,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/length", len(merged_targets),
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.

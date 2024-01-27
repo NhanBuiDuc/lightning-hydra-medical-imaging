@@ -10,5 +10,5 @@ kfold_seed_list: [111, 222, 333, 444, 555]
 num_workers: 1
 pin_memory: False
 is_transform: True
-balance_data: True
+balance_data: False
 binary_unbalance_train_ratio: 100
