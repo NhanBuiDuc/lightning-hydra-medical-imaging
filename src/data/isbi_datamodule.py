@@ -156,7 +156,7 @@ class IsbiDataModule(LightningDataModule):
                 # Assuming you have WeightedRandomSampler, you can use it like this:
                 self.weighted_sampler_train = WeightedRandomSampler(
                     weights=train_weights.tolist(),
-                    num_samples=self.batch_size
+                    num_samples=len(train_input_data)
                 )
                 # Val sampler
                 # Transform labels into numerical format (0 or 1)
