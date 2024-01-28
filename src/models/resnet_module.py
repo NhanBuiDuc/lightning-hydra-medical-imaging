@@ -264,33 +264,16 @@ class ResnetModule(LightningModule):
         self.val_precision.reset()
         self.val_sensitivity_best(self.best_sensitivity)
 
-        merged_preds = torch.cat(self.pred_list, dim=0)
-        merged_targets = torch.cat(self.target_list, dim=0)
-        preds = merged_preds.detach().cpu().numpy()
-        targets = merged_targets.detach().cpu().numpy()
-
-        target_count_zeros = np.count_nonzero(targets == 0)
-        target_count_ones = np.count_nonzero(targets == 1)
-
-        pred_count_zeros = np.count_nonzero(preds == 0)
-        pred_count_ones = np.count_nonzero(preds == 1)
-
-        self.log("val/target_count_zeros", target_count_zeros,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/target_count_ones", target_count_ones,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/pred_count_zeros", pred_count_zeros,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/pred_count_zeros", pred_count_ones,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
         # acc = self.val_acc.compute()  # get current val acc
         # update best so far val acc
 
+        merged_preds = torch.cat(self.pred_list, dim=0)
         merged_logits = torch.cat(self.logits_list, dim=0)
         merged_targets = torch.cat(self.target_list, dim=0)
+
+        preds = merged_preds.detach().cpu().numpy()
         logits = merged_logits.detach().cpu().numpy()
         targets = merged_targets.detach().cpu().numpy()
         # Compute the ROC curve
@@ -309,6 +292,12 @@ class ResnetModule(LightningModule):
         # Calculate the AUC (Area Under the Curve)
         roc_auc = auc(fpr, tpr)
 
+        target_count_zeros = np.count_nonzero(targets == 0)
+        target_count_ones = np.count_nonzero(targets == 1)
+
+        pred_count_zeros = np.count_nonzero(preds == 0)
+        pred_count_ones = np.count_nonzero(preds == 1)
+
         self.log("val/sensitivity", sensitivity_at_desired_specificity,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/roc_auc", roc_auc,
@@ -316,6 +305,14 @@ class ResnetModule(LightningModule):
         self.log("val/threshold", threshold_at_desired_specificity,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/length", len(merged_targets),
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/target_count_zeros", target_count_zeros,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/target_count_ones", target_count_ones,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/pred_count_zeros", pred_count_zeros,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/pred_count_zeros", pred_count_ones,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
         current_best_sensitivity = self.val_sensitivity_best.compute()
