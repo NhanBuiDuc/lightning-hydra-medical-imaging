@@ -312,7 +312,7 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/pred_count_zeros", pred_count_zeros,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/pred_count_zeros", pred_count_ones,
+        self.log("val/pred_count_ones", pred_count_ones,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
         current_best_sensitivity = self.val_sensitivity_best.compute()
