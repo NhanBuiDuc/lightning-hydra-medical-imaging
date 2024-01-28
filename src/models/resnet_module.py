@@ -118,6 +118,7 @@ class ResnetModule(LightningModule):
         self.val_sensitivity_best = MaxMetric()
         self.pred_list = []
         self.target_list = []
+        self.logits_list = []
         self.best_sensitivity = 0
         self.thresh_hold_at_best_sensitivity = 0
         self.auc_at_best_sensitivity = 0
@@ -251,7 +252,8 @@ class ResnetModule(LightningModule):
         self.val_f1(preds, targets)
         self.val_recall(preds, targets)
         self.val_precision(preds, targets)
-        self.pred_list.append(logits)
+        self.logits_list.append(logits)
+        self.pred_list.append(preds)
         self.target_list.append(targets)
 
     def on_validation_epoch_start(self) -> None:
@@ -262,30 +264,10 @@ class ResnetModule(LightningModule):
         self.val_precision.reset()
         self.val_sensitivity_best(self.best_sensitivity)
 
-    def on_validation_epoch_end(self) -> None:
-        "Lightning hook that is called when a validation epoch ends."
-        # acc = self.val_acc.compute()  # get current val acc
-        # update best so far val acc
-
         merged_preds = torch.cat(self.pred_list, dim=0)
         merged_targets = torch.cat(self.target_list, dim=0)
         preds = merged_preds.detach().cpu().numpy()
         targets = merged_targets.detach().cpu().numpy()
-        # Compute the ROC curve
-        fpr, tpr, thresholds = roc_curve(targets, preds)
-        # Desired specificity
-
-        # Find the index of the threshold that is closest to the desired specificity
-        idx = np.argmax(fpr >= (1 - self.desired_specificity))
-
-        # Get the corresponding threshold
-        threshold_at_desired_specificity = thresholds[idx]
-
-        # Get the corresponding TPR (sensitivity)
-        sensitivity_at_desired_specificity = tpr[idx]
-
-        # Calculate the AUC (Area Under the Curve)
-        roc_auc = auc(fpr, tpr)
 
         target_count_zeros = np.count_nonzero(targets == 0)
         target_count_ones = np.count_nonzero(targets == 1)
@@ -301,6 +283,31 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/pred_count_zeros", pred_count_ones,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
+    def on_validation_epoch_end(self) -> None:
+        "Lightning hook that is called when a validation epoch ends."
+        # acc = self.val_acc.compute()  # get current val acc
+        # update best so far val acc
+
+        merged_logits = torch.cat(self.logits_list, dim=0)
+        merged_targets = torch.cat(self.target_list, dim=0)
+        logits = merged_logits.detach().cpu().numpy()
+        targets = merged_targets.detach().cpu().numpy()
+        # Compute the ROC curve
+        fpr, tpr, thresholds = roc_curve(targets, logits)
+        # Desired specificity
+
+        # Find the index of the threshold that is closest to the desired specificity
+        idx = np.argmax(fpr >= (1 - self.desired_specificity))
+
+        # Get the corresponding threshold
+        threshold_at_desired_specificity = thresholds[idx]
+
+        # Get the corresponding TPR (sensitivity)
+        sensitivity_at_desired_specificity = tpr[idx]
+
+        # Calculate the AUC (Area Under the Curve)
+        roc_auc = auc(fpr, tpr)
 
         self.log("val/sensitivity", sensitivity_at_desired_specificity,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
