@@ -349,6 +349,7 @@ class ResnetModule(LightningModule):
         #          sync_dist=True, prog_bar=True)
         self.pred_list = []
         self.target_list = []
+        self.logits_list = []
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
         """Perform a single test step on a batch of data from the test set.
