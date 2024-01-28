@@ -260,6 +260,7 @@ class ResnetModule(LightningModule):
         self.val_f1.reset()
         self.val_recall.reset()
         self.val_precision.reset()
+        self.val_sensitivity_best(self.best_sensitivity)
 
     def on_validation_epoch_end(self) -> None:
         "Lightning hook that is called when a validation epoch ends."
@@ -309,6 +310,7 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/length", len(merged_targets),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
         current_best_sensitivity = self.val_sensitivity_best.compute()
 
         if sensitivity_at_desired_specificity > current_best_sensitivity:
