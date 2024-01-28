@@ -145,7 +145,7 @@ class ResnetModule(LightningModule):
         # self.train_sensitivity_95.reset()
 
         # self.val_sensitivity_95.reset()
-        self.val_sensitivity_best.reset()
+        # self.val_sensitivity_best.reset()
         self.val_sensitivity_best(0)
         self.val_loss.reset()
         self.val_recall.reset()
