@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torchvision.ops.focal_loss import sigmoid_focal_loss
+from kornia.losses import focal_loss
 
 
 class BinaryFocalLoss(nn.Module):
@@ -12,9 +13,9 @@ class BinaryFocalLoss(nn.Module):
         self.alpha = alpha
         self.reduction = reduction
 
-    def forward(self, input, target):
-        loss = sigmoid_focal_loss(inputs=input, targets=target, alpha=self.alpha,
-                                  gamma=self.gamma, reduction=self.reduction)
+    def forward(self, output, target):
+        loss = focal_loss(output, target, alpha=self.alpha,
+                          gamma=self.gamma, reduction=self.reduction)
         return loss
 
 
