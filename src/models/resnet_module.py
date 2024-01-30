@@ -312,7 +312,7 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/target_count_ones", target_count_ones,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/conf_matrix", conf_matrix,
+        self.log("val/conf_matrix", conf_matrix[0],
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # self.log("val/pred_count_zeros", pred_count_zeros,
         #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
