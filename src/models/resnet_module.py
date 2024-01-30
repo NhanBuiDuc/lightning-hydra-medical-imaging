@@ -313,20 +313,21 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/target_count_ones", target_count_ones,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/conf_matrix", conf_matrix,
+        # self.log("val/conf_matrix", conf_matrix,
+        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
+        self.log("val/true_negative", conf_matrix[0][0][0],
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        # self.log("val/true_negative", conf_matrix[0][0][0],
-        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        # self.log("val/false_negative", conf_matrix[0][0][1],
-        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        # self.log("val/false_positive", conf_matrix[0][1][0],
-        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        # self.log("val/true_negative", conf_matrix[0][1][1],
-        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        # self.log("val/pred_count_zeros", pred_count_zeros,
-        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        # self.log("val/pred_count_ones", pred_count_ones,
-        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/false_negative", conf_matrix[0][0][1],
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/false_positive", conf_matrix[0][1][0],
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/true_negative", conf_matrix[0][1][1],
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/pred_count_zeros", pred_count_zeros,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/pred_count_ones", pred_count_ones,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
         current_best_sensitivity = self.val_sensitivity_best.compute()
 
