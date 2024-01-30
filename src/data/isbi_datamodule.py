@@ -225,7 +225,7 @@ class IsbiDataModule(LightningDataModule):
                 )
 
                 self.data_train = IsbiDataSet(
-                    train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
+                    train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True)
 
                 self.data_val = IsbiDataSet(
                     val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
@@ -301,7 +301,7 @@ class IsbiDataModule(LightningDataModule):
                         replacement=False
                     )
                     self.data_train = IsbiDataSet(
-                        train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
+                        train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True)
 
                     self.data_val = IsbiDataSet(
                         val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
@@ -501,7 +501,7 @@ class IsbiDataModule(LightningDataModule):
 
 
 class IsbiDataSet(Dataset):
-    def __init__(self, data, label, class_name, data_length, data_dir, train_image_path, is_transform, transform):
+    def __init__(self, data, label, class_name, data_length, data_dir, train_image_path, is_transform, transform, is_training):
         super().__init__()
         self.data = data
         self.label = label
@@ -511,6 +511,7 @@ class IsbiDataSet(Dataset):
         self.data_dir = data_dir
         self.is_transform = is_transform
         self.transform = transform
+        self.is_training = is_training
 
     def __len__(self):
         return self.data_length
@@ -554,7 +555,8 @@ class IsbiDataSet(Dataset):
         # Apply transformations if specified
         if image is not None:
             if self.is_transform:
-                image = self.transform(image)
+                if self.is_training:
+                    image = self.transform(image)
 
             # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
             label = self.label[index]
