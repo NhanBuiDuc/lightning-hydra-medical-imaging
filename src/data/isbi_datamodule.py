@@ -19,7 +19,7 @@ class IsbiDataModule(LightningDataModule):
         self,
         data_dir: str = "data/",
         train_val_test_split: Tuple[int, int, int] = (0.8, 0.2),
-        image_size: int = 224,
+        image_size: int = 512,
         num_class: int = 2,
         class_name: list = ["NRG", "RG"],
         kfold_seed: int = 111,
@@ -225,10 +225,10 @@ class IsbiDataModule(LightningDataModule):
                 )
 
                 self.data_train = IsbiDataSet(
-                    train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True)
+                    train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
 
                 self.data_val = IsbiDataSet(
-                    val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
+                    val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=False, image_size=self.image_size)
             else:
                 if self.balance_data:
                     input_data = self.train_gt_pdf['Eye ID']
@@ -301,10 +301,10 @@ class IsbiDataModule(LightningDataModule):
                         replacement=False
                     )
                     self.data_train = IsbiDataSet(
-                        train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True)
+                        train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
 
                     self.data_val = IsbiDataSet(
-                        val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms)
+                        val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=False, image_size=self.image_size)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
@@ -501,7 +501,7 @@ class IsbiDataModule(LightningDataModule):
 
 
 class IsbiDataSet(Dataset):
-    def __init__(self, data, label, class_name, data_length, data_dir, train_image_path, is_transform, transform, is_training):
+    def __init__(self, data, label, class_name, data_length, data_dir, train_image_path, is_transform, transform, is_training, image_size):
         super().__init__()
         self.data = data
         self.label = label
@@ -512,6 +512,7 @@ class IsbiDataSet(Dataset):
         self.is_transform = is_transform
         self.transform = transform
         self.is_training = is_training
+        self.image_size = image_size
 
     def __len__(self):
         return self.data_length
@@ -557,7 +558,12 @@ class IsbiDataSet(Dataset):
             if self.is_transform:
                 if self.is_training:
                     image = self.transform(image)
-
+                else:
+                    self.transforms = transforms.Compose([
+                        transforms.Resize((self.image_size, self.image_size)),
+                        transforms.ToTensor(),
+                        transforms.Normalize((0.1307,), (0.3081,))
+                    ])
             # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
             label = self.label[index]
             gt = self.class_name.index(label)
