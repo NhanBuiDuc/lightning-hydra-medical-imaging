@@ -564,6 +564,7 @@ class IsbiDataSet(Dataset):
                         transforms.ToTensor(),
                         transforms.Normalize((0.1307,), (0.3081,))
                     ])
+                    image = self.transform(image)
             # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
             label = self.label[index]
             gt = self.class_name.index(label)
