@@ -316,13 +316,13 @@ class ResnetModule(LightningModule):
         # self.log("val/conf_matrix", conf_matrix,
         #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
-        self.log("val/true_negative", conf_matrix[0][0][0],
+        self.log("val/true_negative", conf_matrix[0][0],
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/false_negative", conf_matrix[0][0][1],
+        self.log("val/false_negative", conf_matrix[0][1],
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/false_positive", conf_matrix[0][1][0],
+        self.log("val/false_positive", conf_matrix[1][0],
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/true_negative", conf_matrix[0][1][1],
+        self.log("val/true_positive", conf_matrix[1][1],
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/pred_count_zeros", pred_count_zeros,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
