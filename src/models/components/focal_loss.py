@@ -14,8 +14,9 @@ class BinaryFocalLoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, output, target):
-        output = output.squeeze(1)
-        target = target.squeeze(1)
+        # Assuming output and target are 1D tensors
+        output = output.unsqueeze(1)  # Add a channel dimension
+        target = target.unsqueeze(1)  # Add a channel dimension
         loss = focal_loss(output, target, alpha=self.alpha,
                           gamma=self.gamma, reduction=self.reduction)
         return loss
