@@ -3,7 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torchvision.ops.focal_loss import sigmoid_focal_loss
-from kornia.losses import focal_loss, binary_focal_loss_with_logits
+# from kornia.losses import focal_loss, binary_focal_loss_with_logits
+import tensorflow as tf
+from focal_loss import binary_focal_loss
 
 
 class BinaryFocalLoss(nn.Module):
@@ -15,10 +17,10 @@ class BinaryFocalLoss(nn.Module):
 
     def forward(self, output, target):
         # Assuming output and target are 1D tensors
-        output = output.view(output.shape[0], 1, 1)
-        target = target.view(target.shape[0], 1, 1)
-        loss = binary_focal_loss_with_logits(output, target, alpha=self.alpha,
-                                             gamma=self.gamma, reduction=self.reduction)
+        # output = output.view(output.shape[0], 1, 1)
+        # target = target.view(target.shape[0], 1, 1)
+        loss = binary_focal_loss(target, output,
+                                 gamma=self.gamma, from_logits=False)
         return loss
 
 
