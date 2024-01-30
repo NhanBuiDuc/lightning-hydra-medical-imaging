@@ -19,6 +19,8 @@ class BinaryFocalLoss(nn.Module):
         # Assuming output and target are 1D tensors
         # output = output.view(output.shape[0], 1, 1)
         # target = target.view(target.shape[0], 1, 1)
+        output = output.detach().cpu().numpy()
+        target = target.detach().cpu().numpy()
         loss = binary_focal_loss(target, output,
                                  gamma=self.gamma, from_logits=False)
         return loss
