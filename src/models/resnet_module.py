@@ -81,7 +81,7 @@ class ResnetModule(LightningModule):
             if self.net.num_classes > 2:
                 self.criterion = FocalLoss(alpha=1, gamma=2)
             else:
-                self.criterion = BinaryFocalLoss(alpha=1, gamma=10)
+                self.criterion = BinaryFocalLoss(alpha=1, gamma=2)
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(
             task=self.task, num_classes=self.net.num_classes)
