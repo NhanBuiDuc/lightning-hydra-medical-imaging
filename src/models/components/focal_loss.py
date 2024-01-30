@@ -15,7 +15,7 @@ class BinaryFocalLoss(nn.Module):
 
     def forward(self, output, target):
         output = output.squeeze(1)
-        target = output.squeeze(1)
+        target = target.squeeze(1)
         loss = focal_loss(output, target, alpha=self.alpha,
                           gamma=self.gamma, reduction=self.reduction)
         return loss
