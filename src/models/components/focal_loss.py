@@ -29,7 +29,7 @@ class BinaryFocalLoss(nn.Module):
 
     def forward(self, inputs, targets):
         inputs = inputs.view(inputs.shape[0], 1)
-        target = target.view(target.shape[0], 1)
+        target = targets.view(targets.shape[0], 1)
         bce_loss = F.binary_cross_entropy(inputs,  targets.float())
         loss = self.alpha * (1 - torch.exp(-bce_loss)) ** self.gamma * bce_loss
         return loss
