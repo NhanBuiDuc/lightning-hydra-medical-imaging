@@ -2,20 +2,18 @@ from typing import Any, Dict, Tuple
 
 import torch
 from lightning import LightningModule
-from torchmetrics import MaxMetric, MeanMetric, F1Score, Precision, Recall, ConfusionMatrix
+from torchmetrics import MaxMetric, MeanMetric, F1Score, Precision, Recall
 from torchmetrics.classification.accuracy import Accuracy
-from torchvision.ops.focal_loss import sigmoid_focal_loss
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import pandas as pd
 from .components.focal_loss import FocalLoss, BinaryFocalLoss
-from .components.sensitivity_95 import Sensitivity
 from sklearn.metrics import roc_curve, roc_auc_score, auc
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
 
-class ResnetModule(LightningModule):
+class EfficientNetModule(LightningModule):
     """Example of a `LightningModule` for MNIST classification.
 
     A `LightningModule` implements 8 key methods:
@@ -79,9 +77,9 @@ class ResnetModule(LightningModule):
             self.criterion = torch.nn.BCELoss()
         elif criterion == "focal":
             if self.net.num_classes > 2:
-                self.criterion = FocalLoss(alpha=1, gamma=2)
+                self.criterion = FocalLoss(alpha=0.2, gamma=2)
             else:
-                self.criterion = BinaryFocalLoss(alpha=1, gamma=2)
+                self.criterion = BinaryFocalLoss(alpha=0.25, gamma=10)
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(
             task=self.task, num_classes=self.net.num_classes)
@@ -124,7 +122,6 @@ class ResnetModule(LightningModule):
         self.thresh_hold_at_best_sensitivity = 0
         self.auc_at_best_sensitivity = 0
         self.desired_specificity = 0.95
-        torch.set_float32_matmul_precision('high')
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Perform a forward pass through the model `self.net`.
@@ -433,4 +430,4 @@ class ResnetModule(LightningModule):
 
 
 if __name__ == "__main__":
-    _ = ResnetModule(None, None, None, None)
+    _ = EfficientNetModule(None, None, None, None)
