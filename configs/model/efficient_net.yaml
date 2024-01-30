@@ -1,4 +1,4 @@
-_target_: src.models.resnet_module.ResnetModule
+_target_: src.models.resnet_module.EfficientNetModule
 
 optimizer:
   _target_: torch.optim.Adam
@@ -13,7 +13,7 @@ scheduler:
   factor: 0.1
   patience: 10
 net:
-  _target_: src.models.components.resnet_torchvision.ResNet
+  _target_: src.models.components.efficient_net_torchvision.EfficientNet
   num_classes: 2
   version: "v1"
 
