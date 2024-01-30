@@ -76,11 +76,12 @@ class IsbiDataModule(LightningDataModule):
                 [transforms.RandomCrop((image_size, image_size)), transforms.CenterCrop((image_size, image_size)), transforms.Pad(10)]),
 
             transforms.RandomApply([transforms.RandomPerspective(), transforms.RandomRotation(degrees=(
-                0, 180)), transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(), transforms.RandomAffine(30)], transforms.ElasticTransform()),
+                0, 180)), transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(), transforms.RandomAffine(30), transforms.ElasticTransform()]),
 
             transforms.RandomApply([transforms.RandomGrayscale(), transforms.ColorJitter(
                 brightness=.5, hue=.3), transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.)), transforms.RandomInvert(), transforms.RandomPosterize(bits=5),
                 transforms.RandomSolarize(threshold=192.0), transforms.RandomAdjustSharpness(sharpness_factor=10), transforms.RandomAutocontrast()], transforms.RandomEqualize()),
+
             transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
             # Convert to PyTorch tensor
