@@ -51,22 +51,37 @@ class IsbiDataModule(LightningDataModule):
         #     transforms.ToTensor(),
         #     transforms.Normalize((0.1307,), (0.3081,))
         # ])
+        # self.transforms = transforms.Compose([
+        #     transforms.Resize((image_size, image_size)),
+        #     # Random rotation
+        #     transforms.RandomRotation(degrees=15),
+        #     transforms.RandomHorizontalFlip(),                              # Horizontal flip
+        #     transforms.ColorJitter(
+        #         brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),     # Color jittering
+        #     transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(
+        #         0.9, 1.1)),                                                 # Random affine transformation
+        #     # Random vertical flip (optional)
+        #     transforms.RandomApply([transforms.RandomVerticalFlip()], p=0.5),
+        #     # Random Gaussian blur (optional)
+        #     transforms.RandomApply(
+        #         [transforms.GaussianBlur(kernel_size=3)], p=0.2),
+        #     # Random noise (optional)
+        #     transforms.RandomApply([transforms.RandomNoise], p=0.2),
+        #     transforms.ToTensor(),
+        #     # Convert to PyTorch tensor
+        #     transforms.Normalize((0.1307,), (0.3081,))
+        # ])
         self.transforms = transforms.Compose([
-            transforms.Resize((image_size, image_size)),
-            # Random rotation
-            transforms.RandomRotation(degrees=15),
-            transforms.RandomHorizontalFlip(),                              # Horizontal flip
-            transforms.ColorJitter(
-                brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),     # Color jittering
-            transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(
-                0.9, 1.1)),                                                 # Random affine transformation
-            # Random vertical flip (optional)
-            transforms.RandomApply([transforms.RandomVerticalFlip()], p=0.5),
-            # Random Gaussian blur (optional)
             transforms.RandomApply(
-                [transforms.GaussianBlur(kernel_size=3)], p=0.2),
-            # Random noise (optional)
-            transforms.RandomApply([transforms.RandomNoise()], p=0.2),
+                [transforms.RandomCrop((image_size, image_size)), transforms.CenterCrop((image_size, image_size)), transforms.Pad(10)]),
+
+            transforms.RandomApply([transforms.RandomPerspective(), transforms.RandomRotation(degrees=(
+                0, 180)), transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(), transforms.RandomAffine(30)], transforms.ElasticTransform()),
+
+            transforms.RandomApply([transforms.RandomGrayscale(), transforms.ColorJitter(
+                brightness=.5, hue=.3), transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.)), transforms.RandomInvert(), transforms.RandomPosterize(bits=5),
+                transforms.RandomSolarize(threshold=192.0), transforms.RandomAdjustSharpness(sharpness_factor=10), transforms.RandomAutocontrast()], transforms.RandomEqualize()),
+            transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
             # Convert to PyTorch tensor
             transforms.Normalize((0.1307,), (0.3081,))
