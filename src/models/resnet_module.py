@@ -12,6 +12,7 @@ from .components.focal_loss import FocalLoss, BinaryFocalLoss
 from .components.sensitivity_95 import Sensitivity
 from sklearn.metrics import roc_curve, roc_auc_score, auc
 import numpy as np
+from sklearn.metrics import confusion_matrix
 
 
 class ResnetModule(LightningModule):
@@ -294,7 +295,11 @@ class ResnetModule(LightningModule):
 
         pred_count_zeros = np.count_nonzero(preds == 0)
         pred_count_ones = np.count_nonzero(preds == 1)
-
+        # Get the predicted labels based on the threshold
+        predicted_labels = (
+            logits >= threshold_at_desired_specificity).astype(int)
+        # Compute confusion matrix
+        conf_matrix = confusion_matrix(targets, predicted_labels)
         self.log("val/sensitivity", sensitivity_at_desired_specificity,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/roc_auc", roc_auc,
@@ -307,10 +312,12 @@ class ResnetModule(LightningModule):
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/target_count_ones", target_count_ones,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/pred_count_zeros", pred_count_zeros,
+        self.log("val/conf_matrix", conf_matrix,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/pred_count_ones", pred_count_ones,
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        # self.log("val/pred_count_zeros", pred_count_zeros,
+        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        # self.log("val/pred_count_ones", pred_count_ones,
+        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
         current_best_sensitivity = self.val_sensitivity_best.compute()
 
