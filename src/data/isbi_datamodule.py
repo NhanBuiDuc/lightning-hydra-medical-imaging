@@ -46,12 +46,31 @@ class IsbiDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         # data transformations
+        # self.transforms = transforms.Compose([
+        #     transforms.Resize((image_size, image_size)),
+        #     transforms.ToTensor(),
+        #     transforms.Normalize((0.1307,), (0.3081,))
+        # ])
         self.transforms = transforms.Compose([
             transforms.Resize((image_size, image_size)),
+            # Random rotation
+            transforms.RandomRotation(degrees=15),
+            transforms.RandomHorizontalFlip(),                              # Horizontal flip
+            transforms.ColorJitter(
+                brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),     # Color jittering
+            transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(
+                0.9, 1.1)),                                                 # Random affine transformation
+            # Random vertical flip (optional)
+            transforms.RandomApply([transforms.RandomVerticalFlip()], p=0.5),
+            # Random Gaussian blur (optional)
+            transforms.RandomApply(
+                [transforms.GaussianBlur(kernel_size=3)], p=0.2),
+            # Random noise (optional)
+            transforms.RandomApply([transforms.RandomNoise()], p=0.2),
             transforms.ToTensor(),
+            # Convert to PyTorch tensor
             transforms.Normalize((0.1307,), (0.3081,))
         ])
-
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None

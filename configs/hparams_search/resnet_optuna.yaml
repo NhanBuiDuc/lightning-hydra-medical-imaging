@@ -46,12 +46,12 @@ hydra:
     # define hyperparameter search space
     params:
       # model.optimizer.lr: choice(0.0001, 0.001)
-      model.optimizer.lr: choice(0.01, 0.001, 0.0001)
+      model.optimizer.lr: choice(0.0001)
       # model.criterion: choice("focal", "entropy")
       model.criterion: choice("focal")
       data.batch_size: choice(32)
-      data.image_size: choice(448, 512)
-      data.binary_unbalance_train_ratio: choice(100)
+      # data.image_size: choice(448, 512)
+      data.image_size: choice(512)
       data.kfold_seed: choice(111, 222, 333, 444, 555)
       # model.net.version: choice("resnet18", "resnet34", "resnet50", "resnet101", "resnet152")
-      model.net.version: choice("resnet50", "resnet101")
+      model.net.version: choice("resnet50")
