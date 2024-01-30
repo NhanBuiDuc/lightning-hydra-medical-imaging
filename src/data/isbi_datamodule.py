@@ -80,7 +80,7 @@ class IsbiDataModule(LightningDataModule):
 
             transforms.RandomApply([transforms.RandomGrayscale(), transforms.ColorJitter(
                 brightness=.5, hue=.3), transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.)), transforms.RandomInvert(), transforms.RandomPosterize(bits=5),
-                transforms.RandomSolarize(threshold=192.0), transforms.RandomAdjustSharpness(sharpness_factor=10), transforms.RandomAutocontrast()], transforms.RandomEqualize()),
+                transforms.RandomSolarize(threshold=192.0), transforms.RandomAdjustSharpness(sharpness_factor=10), transforms.RandomAutocontrast(), transforms.RandomEqualize()]),
 
             transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
