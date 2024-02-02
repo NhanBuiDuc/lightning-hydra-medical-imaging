@@ -23,7 +23,7 @@ class IsbiDataModule(LightningDataModule):
         num_class: int = 2,
         class_name: list = ["NRG", "RG"],
         kfold_seed: int = 111,
-        kfold_seed_list: list = [111, 222, 333, 444, 555],
+        kfold_index: int = 0,
         batch_size: int = 16,
         num_workers: int = 0,
         pin_memory: bool = False,
@@ -46,31 +46,6 @@ class IsbiDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         # data transformations
-        # self.transforms = transforms.Compose([
-        #     transforms.Resize((image_size, image_size)),
-        #     transforms.ToTensor(),
-        #     transforms.Normalize((0.1307,), (0.3081,))
-        # ])
-        # self.transforms = transforms.Compose([
-        #     transforms.Resize((image_size, image_size)),
-        #     # Random rotation
-        #     transforms.RandomRotation(degrees=15),
-        #     transforms.RandomHorizontalFlip(),                              # Horizontal flip
-        #     transforms.ColorJitter(
-        #         brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),     # Color jittering
-        #     transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(
-        #         0.9, 1.1)),                                                 # Random affine transformation
-        #     # Random vertical flip (optional)
-        #     transforms.RandomApply([transforms.RandomVerticalFlip()], p=0.5),
-        #     # Random Gaussian blur (optional)
-        #     transforms.RandomApply(
-        #         [transforms.GaussianBlur(kernel_size=3)], p=0.2),
-        #     # Random noise (optional)
-        #     transforms.RandomApply([transforms.RandomNoise], p=0.2),
-        #     transforms.ToTensor(),
-        #     # Convert to PyTorch tensor
-        #     transforms.Normalize((0.1307,), (0.3081,))
-        # ])
         self.transforms = transforms.Compose([
             transforms.RandomApply(
                 [transforms.RandomCrop((image_size, image_size)), transforms.CenterCrop((image_size, image_size)), transforms.Pad(10)]),
@@ -98,7 +73,7 @@ class IsbiDataModule(LightningDataModule):
         self.num_class = num_class
         self.batch_size = batch_size
         self.kfold_seed = kfold_seed
-        self.kfold_seed_list = kfold_seed_list
+        self.kfold_index = kfold_index
         self.training_split = train_val_test_split[0]
         self.validation_split = train_val_test_split[1]
         self.is_transform = is_transform
@@ -152,11 +127,10 @@ class IsbiDataModule(LightningDataModule):
                 input_data = self.train_gt_pdf['Eye ID']
                 labels = self.train_gt_pdf['Final Label']
                 # Choose fold to train on
-                kf = StratifiedKFold(n_splits=len(self.kfold_seed_list),
+                kf = StratifiedKFold(n_splits=5,
                                      shuffle=True, random_state=self.kfold_seed)
                 all_splits = [k for k in kf.split(input_data, labels)]
-                k = self.kfold_seed_list.index(self.kfold_seed)
-                train_indexes, val_indexes = all_splits[k]
+                train_indexes, val_indexes = all_splits[self.kfold_index]
 
                 # Count the number of samples in class 1 in the training set
                 train_input_data = input_data[train_indexes].tolist()
@@ -234,11 +208,10 @@ class IsbiDataModule(LightningDataModule):
                     input_data = self.train_gt_pdf['Eye ID']
                     labels = self.train_gt_pdf['Final Label']
                     # Choose fold to train on
-                    kf = StratifiedKFold(n_splits=len(self.kfold_seed_list),
+                    kf = StratifiedKFold(n_splits=5,
                                          shuffle=True, random_state=self.kfold_seed)
                     all_splits = [k for k in kf.split(input_data, labels)]
-                    k = self.kfold_seed_list.index(self.kfold_seed)
-                    train_indexes, val_indexes = all_splits[k]
+                    train_indexes, val_indexes = all_splits[self.kfold_index]
 
                     # Count the number of samples in class 1 in the training set
                     train_count_class_1 = (
