@@ -8,7 +8,7 @@ class_name: ["NRG", "RG"]
 kfold_seed: 111
 kfold_index: 0
 num_workers: 10
-pin_memory: False
+pin_memory: True
 is_transform: True
 balance_data: False
 binary_unbalance_train_ratio: 100
