@@ -53,6 +53,6 @@ hydra:
       # data.image_size: choice(448, 512)
       data.image_size: choice(512)
       data.kfold_index: choice(0, 1, 2, 3, 4)
-      data.kfold_seed: choice(111)
+      data.kfold_seed: 111
       # model.net.version: choice("resnet18", "resnet34", "resnet50", "resnet101", "resnet152")
       model.net.version: choice("resnet152")
