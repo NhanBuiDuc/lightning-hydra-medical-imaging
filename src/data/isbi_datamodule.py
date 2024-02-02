@@ -528,8 +528,8 @@ class IsbiDataSet(Dataset):
 
         # Apply transformations if specified
         if image is not None:
-            if self.is_transform:
-                if self.is_training:
+            if self.is_training:
+                if self.is_transform:
                     image = self.transform(image)
                 else:
                     self.transforms = transforms.Compose([
@@ -538,6 +538,13 @@ class IsbiDataSet(Dataset):
                         transforms.Normalize((0.1307,), (0.3081,))
                     ])
                     image = self.transform(image)
+            else:
+                self.transforms = transforms.Compose([
+                    transforms.Resize((self.image_size, self.image_size)),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.1307,), (0.3081,))
+                ])
+                image = self.transform(image)
             # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
             label = self.label[index]
             gt = self.class_name.index(label)
