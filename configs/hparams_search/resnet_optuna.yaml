@@ -46,7 +46,7 @@ hydra:
     # define hyperparameter search space
     params:
       # model.optimizer.lr: choice(0.0001, 0.001)
-      model.optimizer.lr: choice(0.001)
+      model.optimizer.lr: choice(0.01)
       # model.criterion: choice("focal", "entropy")
       model.criterion: choice("entropy")
       data.batch_size: choice(32)
