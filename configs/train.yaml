@@ -5,7 +5,7 @@
 defaults:
   - _self_
   - data: isbi_bin
-  - model: resnet
+  - model: vit
   - callbacks: default
   - logger: null # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
   - trainer: default
