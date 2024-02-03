@@ -165,10 +165,10 @@ class IsbiDataModule(LightningDataModule):
 
                 # Count the number of samples in class 1 in the training set
                 train_input_data = input_data[train_indexes].tolist()
-                train_label_data = labels[train_indexes].tolist()
+                train_label_data = labels_numeric[train_indexes].tolist()
 
                 val_input_data = input_data[val_indexes].tolist()
-                val_label_data = labels[val_indexes].tolist()
+                val_label_data = labels_numeric[val_indexes].tolist()
 
                 # Train sampler
                 train_class_distribution = {
@@ -289,10 +289,10 @@ class IsbiDataModule(LightningDataModule):
                     np.random.shuffle(merged_indexes)
 
                     train_input_data = input_data[merged_indexes].tolist()
-                    train_label_data = labels[merged_indexes].tolist()
+                    train_label_data = labels_numeric[merged_indexes].tolist()
 
                     val_input_data = input_data[val_indexes].tolist()
-                    val_label_data = labels[val_indexes].tolist()
+                    val_label_data = labels_numeric[val_indexes].tolist()
                     # Transform labels into numerical format (0 or 1)
                     val_class_distribution = {
                         item: 0 for item in self.class_name}
