@@ -154,7 +154,7 @@ class IsbiDataModule(LightningDataModule):
 
                 # Transform labels into numerical format (0 or 1)
                 labels_numeric = [class_to_numeric[label] for label in labels]
-
+                labels_numeric = np.array(labels_numeric)
                 # Choose fold to train on
                 kf = StratifiedKFold(n_splits=5,
                                      shuffle=True, random_state=self.kfold_seed)
@@ -253,7 +253,7 @@ class IsbiDataModule(LightningDataModule):
                     # Transform labels into numerical format (0 or 1)
                     labels_numeric = [class_to_numeric[label]
                                       for label in labels]
-
+                    labels_numeric = np.array(labels_numeric)
                     # Choose fold to train on
                     kf = StratifiedKFold(n_splits=5,
                                          shuffle=True, random_state=self.kfold_seed)
