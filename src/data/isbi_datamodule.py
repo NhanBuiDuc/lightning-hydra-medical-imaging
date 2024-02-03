@@ -211,10 +211,10 @@ class IsbiDataModule(LightningDataModule):
                 # )
 
                 self.data_train = IsbiDataSet(
-                    train_input_data.to_list(), train_label_data.to_list(), self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
+                    train_input_data.tolist(), train_label_data.tolist(), self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
 
                 self.data_val = IsbiDataSet(
-                    val_input_data.to_list(), val_label_data.to_list(), self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=False, image_size=self.image_size)
+                    val_input_data.tolist(), val_label_data.tolist(), self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=False, image_size=self.image_size)
             else:
                 if self.balance_data:
                     input_data = self.train_gt_pdf['Eye ID']
