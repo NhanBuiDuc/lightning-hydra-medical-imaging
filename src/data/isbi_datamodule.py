@@ -182,20 +182,21 @@ class IsbiDataModule(LightningDataModule):
                 # Calculate class weights
                 train_class_weights = 1. / \
                     torch.tensor(train_class_counts, dtype=torch.float)
-                # Map class labels to indices
-                train_class_to_index = {
-                    self.class_name[i]: i for i in range(len(self.class_name))}
+                # # Map class labels to indices
+                # train_class_to_index = {
+                #     self.class_name[i]: i for i in range(len(self.class_name))}
 
-                train_label_indices = [train_class_to_index[label]
-                                       for label in train_label_data]
+                # train_label_indices = [train_class_to_index[label]
+                #                        for label in train_label_data]
 
-                # Assign weights to each sample in the validation set
-                train_weights = train_class_weights[train_label_indices]
+                # # Assign weights to each sample in the validation set
+                # train_weights = train_class_weights[train_label_indices]
 
                 # Assuming you have WeightedRandomSampler, you can use it like this:
                 self.weighted_sampler_train = WeightedRandomSampler(
-                    weights=train_weights.tolist(),
-                    num_samples=len(train_input_data)
+                    weights=train_class_weights.tolist(),
+                    num_samples=len(train_input_data),
+                    replacement=False
                 )
 
                 # Calculate class weights
