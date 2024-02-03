@@ -46,22 +46,44 @@ class IsbiDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
         torch.backends.bottleneck = True
         # data transformations
-        self.transforms = transforms.Compose([
-            transforms.RandomApply(
-                [transforms.RandomCrop((image_size, image_size)), transforms.CenterCrop((image_size, image_size)), transforms.Pad(10)]),
+        # self.transforms = transforms.Compose([
+        #     transforms.RandomApply(
+        #         [transforms.RandomCrop((image_size, image_size)), transforms.CenterCrop((image_size, image_size)), transforms.Pad(10)]),
 
-            transforms.RandomApply([transforms.RandomPerspective(), transforms.RandomRotation(degrees=(
-                0, 180)), transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(), transforms.RandomAffine(30), transforms.ElasticTransform()]),
+        #     transforms.RandomApply([transforms.RandomPerspective(), transforms.RandomRotation(degrees=(
+        #         0, 180)), transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(), transforms.RandomAffine(30), transforms.ElasticTransform()]),
 
-            transforms.RandomApply([transforms.RandomGrayscale(), transforms.ColorJitter(
-                brightness=.5, hue=.3), transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.)), transforms.RandomInvert(), transforms.RandomPosterize(bits=5),
-                transforms.RandomSolarize(threshold=192.0), transforms.RandomAdjustSharpness(sharpness_factor=10), transforms.RandomAutocontrast(), transforms.RandomEqualize()]),
+        #     transforms.RandomApply([transforms.RandomGrayscale(), transforms.ColorJitter(
+        #         brightness=.5, hue=.3), transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.)), transforms.RandomInvert(), transforms.RandomPosterize(bits=5),
+        #         transforms.RandomSolarize(threshold=192.0), transforms.RandomAdjustSharpness(sharpness_factor=10), transforms.RandomAutocontrast(), transforms.RandomEqualize()]),
 
-            transforms.Resize((image_size, image_size)),
+        #     transforms.Resize((image_size, image_size)),
+        #     transforms.ToTensor(),
+        #     # Convert to PyTorch tensor
+        #     transforms.Normalize((0.1307,), (0.3081,))
+        # ])
+
+        trans = transforms.Compose([transforms.ToTensor(), ])
+        trans1 = transforms.Compose([
+            # transforms.RandomCrop(256),
+            # transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            # Convert to PyTorch tensor
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])
+            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+
+        trans2 = transforms.Compose([
+            # transforms.RandomCrop(256),
+            transforms.RandomHorizontalFlip(0.5),
+            transforms.RandomVerticalFlip(0.5),
+            transforms.ToTensor()])
+
+        trans3 = transforms.Compose([
+            # transforms.RandomCrop(256),
+            # transforms.RandomHorizontalFlip(0.5),
+            # transforms.RandomVerticalFlip(0.5),
+            transforms.ToTensor()])
+
+        self.transforms = trans
+
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None

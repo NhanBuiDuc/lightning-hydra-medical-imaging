@@ -12,7 +12,7 @@ from .components.focal_loss import FocalLoss, BinaryFocalLoss
 from .components.sensitivity_95 import Sensitivity
 from sklearn.metrics import roc_curve, roc_auc_score, auc
 import numpy as np
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 
 
 class VITModule(LightningModule):
@@ -85,22 +85,22 @@ class VITModule(LightningModule):
         # metric objects for calculating and averaging accuracy across batches
         self.train_acc = Accuracy(
             task=self.task, num_classes=self.net.num_classes)
-        self.val_acc = Accuracy(
-            task=self.task, num_classes=self.net.num_classes)
+        # self.val_acc = Accuracy(
+        #     task=self.task, num_classes=self.net.num_classes)
 
         self.train_f1 = F1Score(
             task=self.task, num_classes=self.net.num_classes)
-        self.val_f1 = F1Score(task=self.task, num_classes=self.net.num_classes)
+        # self.val_f1 = F1Score(task=self.task, num_classes=self.net.num_classes)
 
         self.train_recall = Recall(
             task=self.task, num_classes=self.net.num_classes)
-        self.val_recall = Recall(
-            task=self.task, num_classes=self.net.num_classes)
+        # self.val_recall = Recall(
+        #     task=self.task, num_classes=self.net.num_classes)
 
         self.train_precision = Precision(
             task=self.task, num_classes=self.net.num_classes)
-        self.val_precision = Precision(
-            task=self.task, num_classes=self.net.num_classes)
+        # self.val_precision = Precision(
+        #     task=self.task, num_classes=self.net.num_classes)
 
         # self.train_confusion_matrix = ConfusionMatrix(
         #     task=self.task, num_classes=self.net.num_classes)
@@ -116,6 +116,7 @@ class VITModule(LightningModule):
         # self.val_f1_best = MaxMetric()
         # self.train_sensitivity_95 = sensitivity(0.95)
         # self.val_sensitivity_95 = Sensitivity(0.95)
+
         self.val_sensitivity_best = MaxMetric()
         self.pred_list = []
         self.target_list = []
@@ -147,10 +148,10 @@ class VITModule(LightningModule):
 
         self.val_sensitivity_best.reset()
         self.val_sensitivity_best(0)
-        self.val_loss.reset()
-        self.val_recall.reset()
-        self.val_precision.reset()
-        self.val_acc.reset()
+        # self.val_loss.reset()
+        # self.val_recall.reset()
+        # self.val_precision.reset()
+        # self.val_acc.reset()
         # self.val_f1_best.reset()
         # self.val_confusion_matrix.reset()
 
@@ -247,20 +248,20 @@ class VITModule(LightningModule):
 
         # update and log metrics
         self.val_loss(loss)
-        self.val_acc(preds, targets)
-        self.val_f1(preds, targets)
-        self.val_recall(preds, targets)
-        self.val_precision(preds, targets)
+        # self.val_acc(preds, targets)
+        # self.val_f1(preds, targets)
+        # self.val_recall(preds, targets)
+        # self.val_precision(preds, targets)
         self.logits_list.append(logits)
         self.pred_list.append(preds)
         self.target_list.append(targets)
 
     def on_validation_epoch_start(self) -> None:
         self.val_loss.reset()
-        self.val_acc.reset()
-        self.val_f1.reset()
-        self.val_recall.reset()
-        self.val_precision.reset()
+        # self.val_acc.reset()
+        # self.val_f1.reset()
+        # self.val_recall.reset()
+        # self.val_precision.reset()
         self.val_sensitivity_best(self.best_sensitivity)
 
     def on_validation_epoch_end(self) -> None:
@@ -339,6 +340,18 @@ class VITModule(LightningModule):
             self.thresh_hold_at_best_sensitivity = threshold_at_desired_specificity
             self.val_sensitivity_best(sensitivity_at_desired_specificity)
 
+        # Calculate accuracy
+        accuracy = accuracy_score(targets, predicted_labels)
+
+        # Calculate precision
+        precision = precision_score(targets, predicted_labels)
+
+        # Calculate recall
+        recall = recall_score(targets, predicted_labels)
+
+        # Calculate F1 score
+        f1 = f1_score(targets, predicted_labels)
+
         self.log("val/sensitivity_best", self.val_sensitivity_best.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         self.log("val/roc_auc_best", self.auc_at_best_sensitivity,
@@ -346,16 +359,26 @@ class VITModule(LightningModule):
         self.log("val/thresh_hold_best", self.thresh_hold_at_best_sensitivity,
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
 
+        self.log("val/acc", accuracy, on_step=False,
+                 on_epoch=True, prog_bar=True, logger=True)
+        self.log("val/f1", f1,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/recall", recall,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        self.log("val/precision", precision,
+                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
         self.log("val/loss", self.val_loss.compute(),
                  on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/acc", self.val_acc.compute(), on_step=False,
-                 on_epoch=True, prog_bar=True, logger=True)
-        self.log("val/f1", self.val_f1.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/recall", self.val_recall.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
-        self.log("val/precision", self.val_precision.compute(),
-                 on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+
+        # self.log("val/acc", self.val_acc.compute(), on_step=False,
+        #          on_epoch=True, prog_bar=True, logger=True)
+        # self.log("val/f1", self.val_f1.compute(),
+        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        # self.log("val/recall", self.val_recall.compute(),
+        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
+        # self.log("val/precision", self.val_precision.compute(),
+        #          on_step=False, on_epoch=True, prog_bar=True,  logger=True)
         # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
         # otherwise metric would be reset by lightning after each epoch
         # self.log("val/f1_best", self.val_f1_best.compute(),
@@ -433,4 +456,4 @@ class VITModule(LightningModule):
 
 
 if __name__ == "__main__":
-    _ = ResnetModule(None, None, None, None)
+    _ = VITModule(None, None, None, None)

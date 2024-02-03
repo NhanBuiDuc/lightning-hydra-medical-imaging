@@ -46,11 +46,10 @@ hydra:
     # define hyperparameter search space
     params:
       # model.optimizer.lr: choice(0.0001, 0.001)
-      model.optimizer.lr: choice(0.001)
+      model.optimizer.lr: choice(0.0001)
       # model.criterion: choice("focal", "entropy")
-      model.criterion: choice("entropy")
-      data.batch_size: choice(16)
-      # data.image_size: choice(448, 512)
+      model.criterion: choice("focal")
+      data.batch_size: choice(8)
       data.image_size: choice(512)
       data.kfold_index: choice(0, 1, 2, 3, 4)
       data.kfold_seed: 111
