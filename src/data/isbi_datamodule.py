@@ -179,9 +179,9 @@ class IsbiDataModule(LightningDataModule):
                       val_class_counts[0])
                 print("val/class_ones_count: ", val_class_counts[1])
 
-                # Calculate class weights
-                train_class_weights = 1. / \
-                    torch.tensor(train_class_counts, dtype=torch.float)
+                # # Calculate class weights
+                # train_class_weights = 1. / \
+                #     torch.tensor(train_class_counts, dtype=torch.float)
                 # # Map class labels to indices
                 # train_class_to_index = {
                 #     self.class_name[i]: i for i in range(len(self.class_name))}
@@ -211,10 +211,10 @@ class IsbiDataModule(LightningDataModule):
                 # )
 
                 self.data_train = IsbiDataSet(
-                    train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
+                    train_input_data.to_list(), train_label_data.to_list(), self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
 
                 self.data_val = IsbiDataSet(
-                    val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=False, image_size=self.image_size)
+                    val_input_data.to_list(), val_label_data.to_list(), self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=False, image_size=self.image_size)
             else:
                 if self.balance_data:
                     input_data = self.train_gt_pdf['Eye ID']
@@ -321,7 +321,7 @@ class IsbiDataModule(LightningDataModule):
                 batch_size=self.batch_size,
                 num_workers=self.hparams.num_workers,
                 pin_memory=self.hparams.pin_memory,
-                shuffle=False,
+                shuffle=True,
                 persistent_workers=True,
                 # sampler=self.weighted_sampler_train
             )
@@ -337,7 +337,7 @@ class IsbiDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            shuffle=False,
+            shuffle=True,
             persistent_workers=True,
             # sampler=self.weighted_sampler_val
         )
@@ -352,7 +352,7 @@ class IsbiDataModule(LightningDataModule):
             batch_size=self.batch_size_per_device,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            shuffle=False,
+            shuffle=True,
             persistent_workers=True
         )
 
