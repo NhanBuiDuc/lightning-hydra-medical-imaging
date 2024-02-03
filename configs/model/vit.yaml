@@ -1,4 +1,4 @@
-_target_: src.models.resnet_module.VITModule
+_target_: src.models.vit_module.VITModule
 
 optimizer:
   _target_: torch.optim.Adam
