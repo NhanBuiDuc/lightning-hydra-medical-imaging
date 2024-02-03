@@ -181,10 +181,8 @@ class IsbiDataModule(LightningDataModule):
                 train_class_counts = [train_class_distribution[self.class_name[i]]
                                       for i in range(len(self.class_name))]
 
-                self.log("train/class_zeros_count", train_class_counts[0],
-                         on_step=False, on_epoch=True, prog_bar=False,  logger=True)
-                self.log("train/class_ones_count", train_class_counts[1],
-                         on_step=False, on_epoch=True, prog_bar=False,  logger=True)
+                print("train/class_zeros_count: ", train_class_counts[0])
+                print("train/class_ones_count: ", train_class_counts[1])
 
                 # Calculate class weights
                 train_class_weights = 1. / \
@@ -214,6 +212,10 @@ class IsbiDataModule(LightningDataModule):
                 # Convert class_distribution to a list of counts in the order of class_name
                 val_class_counts = [val_class_distribution[self.class_name[i]]
                                     for i in range(len(self.class_name))]
+
+                print("val/class_zeros_count: ",
+                      val_class_counts[0])
+                print("val/class_ones_count: ", val_class_counts[1])
 
                 # Calculate class weights
                 val_class_weights = 1. / \
