@@ -148,10 +148,19 @@ class IsbiDataModule(LightningDataModule):
             if not self.balance_data:
                 input_data = self.train_gt_pdf['Eye ID']
                 labels = self.train_gt_pdf['Final Label']
+                # Map class labels to numerical values
+                class_to_numeric = {class_label: idx for idx,
+                                    class_label in enumerate(self.class_name)}
+
+                # Transform labels into numerical format (0 or 1)
+                labels_numeric = [class_to_numeric[label] for label in labels]
+
                 # Choose fold to train on
                 kf = StratifiedKFold(n_splits=5,
                                      shuffle=True, random_state=self.kfold_seed)
-                all_splits = [k for k in kf.split(input_data, labels)]
+
+                all_splits = [k for k in kf.split(input_data, labels_numeric)]
+
                 train_indexes, val_indexes = all_splits[self.kfold_index]
 
                 # Count the number of samples in class 1 in the training set
@@ -167,17 +176,17 @@ class IsbiDataModule(LightningDataModule):
 
                 for item in val_label_data:
                     train_class_distribution[item] += 1
+
                 # Convert class_distribution to a list of counts in the order of class_name
                 train_class_counts = [train_class_distribution[self.class_name[i]]
                                       for i in range(len(self.class_name))]
-
                 # Calculate class weights
                 train_class_weights = 1. / \
                     torch.tensor(train_class_counts, dtype=torch.float)
-
                 # Map class labels to indices
                 train_class_to_index = {
                     self.class_name[i]: i for i in range(len(self.class_name))}
+
                 train_label_indices = [train_class_to_index[label]
                                        for label in train_label_data]
 
@@ -229,21 +238,31 @@ class IsbiDataModule(LightningDataModule):
                 if self.balance_data:
                     input_data = self.train_gt_pdf['Eye ID']
                     labels = self.train_gt_pdf['Final Label']
+                    # Map class labels to numerical values
+                    class_to_numeric = {class_label: idx for idx,
+                                        class_label in enumerate(self.class_name)}
+
+                    # Transform labels into numerical format (0 or 1)
+                    labels_numeric = [class_to_numeric[label]
+                                      for label in labels]
+
                     # Choose fold to train on
                     kf = StratifiedKFold(n_splits=5,
                                          shuffle=True, random_state=self.kfold_seed)
-                    all_splits = [k for k in kf.split(input_data, labels)]
+                    all_splits = [k for k in kf.split(
+                        input_data, labels_numeric)]
+
                     train_indexes, val_indexes = all_splits[self.kfold_index]
 
                     # Count the number of samples in class 1 in the training set
                     train_count_class_1 = (
                         labels.iloc[train_indexes] == 'RG').sum()
-                    train_count_class_0 = (
-                        labels.iloc[train_indexes] == 'NRG').sum()
-                    val_count_class_1 = (
-                        labels.iloc[val_indexes] == 'RG').sum()
-                    val_count_class_0 = (
-                        labels.iloc[val_indexes] == 'NRG').sum()
+                    # train_count_class_0 = (
+                    #     labels.iloc[train_indexes] == 'NRG').sum()
+                    # val_count_class_1 = (
+                    #     labels.iloc[val_indexes] == 'RG').sum()
+                    # val_count_class_0 = (
+                    #     labels.iloc[val_indexes] == 'NRG').sum()
                     # Remove samples of class 0 until it equals the count of class 1
                     train_class_0_indexes = train_indexes[labels.iloc[train_indexes] == "NRG"]
                     train_class_1_indexes = train_indexes[labels.iloc[train_indexes] == "RG"]
@@ -569,14 +588,14 @@ class IsbiDataSet(Dataset):
                 image = self.transform(image)
             # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
             label = self.label[index]
-            gt = self.class_name.index(label)
+
             # Create a one-hot encoded tensor
             if len(self.class_name) > 2:
                 one_hot_encoded = torch.zeros(
                     len(self.class_name), dtype=torch.float32)
-                one_hot_encoded[gt] = torch.ones(1, dtype=torch.float32)
+                one_hot_encoded[label] = torch.ones(1, dtype=torch.float32)
             else:
-                one_hot_encoded = torch.tensor(gt, dtype=torch.float32)
+                one_hot_encoded = torch.tensor(label, dtype=torch.float32)
 
             return image, one_hot_encoded
         else:

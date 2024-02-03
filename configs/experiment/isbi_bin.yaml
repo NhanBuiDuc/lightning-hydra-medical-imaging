@@ -20,7 +20,7 @@ trainer:
   gradient_clip_val: 0.5
 data:
   num_workers: 13
-  balance_data: True
+  balance_data: False
   binary_unbalance_train_ratio: 100
   is_transform: True
 # paths:
