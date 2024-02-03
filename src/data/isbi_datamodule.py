@@ -9,7 +9,7 @@ import os
 import pandas as pd
 import numpy as np
 from PIL import Image
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.utils.class_weight import compute_class_weight
 
 
@@ -156,8 +156,8 @@ class IsbiDataModule(LightningDataModule):
                 labels_numeric = [class_to_numeric[label] for label in labels]
                 labels_numeric = np.array(labels_numeric)
                 # Choose fold to train on
-                kf = StratifiedKFold(n_splits=5,
-                                     shuffle=True, random_state=self.kfold_seed)
+                kf = KFold(n_splits=5,
+                           shuffle=True, random_state=self.kfold_seed)
 
                 all_splits = [k for k in kf.split(input_data, labels_numeric)]
 
@@ -180,7 +180,7 @@ class IsbiDataModule(LightningDataModule):
                 print("val/class_ones_count: ", val_class_counts[1])
 
                 # Calculate class weights
-                train_class_weights = 100. / \
+                train_class_weights = 1. / \
                     torch.tensor(train_class_counts, dtype=torch.float)
                 # # Map class labels to indices
                 # train_class_to_index = {
@@ -200,7 +200,7 @@ class IsbiDataModule(LightningDataModule):
                 )
 
                 # Calculate class weights
-                val_class_weights = 100. / \
+                val_class_weights = 1. / \
                     torch.tensor(val_class_counts, dtype=torch.float)
 
                 # Assuming you have WeightedRandomSampler, you can use it like this:
