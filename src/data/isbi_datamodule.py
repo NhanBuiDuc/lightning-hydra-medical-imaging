@@ -164,25 +164,20 @@ class IsbiDataModule(LightningDataModule):
                 train_indexes, val_indexes = all_splits[self.kfold_index]
 
                 # Count the number of samples in class 1 in the training set
-                train_input_data = input_data[train_indexes].tolist()
-                train_label_data = labels_numeric[train_indexes].tolist()
+                train_input_data = input_data[train_indexes]
+                train_label_data = labels_numeric[train_indexes]
 
-                val_input_data = input_data[val_indexes].tolist()
-                val_label_data = labels_numeric[val_indexes].tolist()
+                val_input_data = input_data[val_indexes]
+                val_label_data = labels_numeric[val_indexes]
 
-                # Train sampler
-                train_class_distribution = {
-                    item: 0 for item in self.class_name}
-
-                for item in val_label_data:
-                    train_class_distribution[item] += 1
-
-                # Convert class_distribution to a list of counts in the order of class_name
-                train_class_counts = [train_class_distribution[self.class_name[i]]
-                                      for i in range(len(self.class_name))]
+                train_class_counts = np.bincount(train_label_data)
+                val_class_counts = np.bincount(val_label_data)
 
                 print("train/class_zeros_count: ", train_class_counts[0])
-                print("train/class_ones_count: ", train_class_counts[1])
+                print("train/class_ones_count: ", val_class_counts[1])
+                print("val/class_zeros_count: ",
+                      val_class_counts[0])
+                print("val/class_ones_count: ", val_class_counts[1])
 
                 # Calculate class weights
                 train_class_weights = 1. / \
@@ -202,20 +197,6 @@ class IsbiDataModule(LightningDataModule):
                     weights=train_weights.tolist(),
                     num_samples=len(train_input_data)
                 )
-                # Val sampler
-                # Transform labels into numerical format (0 or 1)
-                val_class_distribution = {
-                    item: 0 for item in self.class_name}
-
-                for item in val_label_data:
-                    val_class_distribution[item] += 1
-                # Convert class_distribution to a list of counts in the order of class_name
-                val_class_counts = [val_class_distribution[self.class_name[i]]
-                                    for i in range(len(self.class_name))]
-
-                print("val/class_zeros_count: ",
-                      val_class_counts[0])
-                print("val/class_ones_count: ", val_class_counts[1])
 
                 # Calculate class weights
                 val_class_weights = 1. / \
