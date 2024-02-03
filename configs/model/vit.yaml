@@ -13,7 +13,7 @@ scheduler:
   factor: 0.1
   patience: 10
 net:
-  _target_: src.models.components.efficient_net_torchvision.Swin
+  _target_: src.models.components.vit_torchvision.Swin
   num_classes: 2
   version: "swin_v2_b"
 
