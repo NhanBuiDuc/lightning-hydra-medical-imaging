@@ -174,13 +174,13 @@ class IsbiDataModule(LightningDataModule):
                 val_class_counts = np.bincount(val_label_data)
 
                 print("train/class_zeros_count: ", train_class_counts[0])
-                print("train/class_ones_count: ", val_class_counts[1])
+                print("train/class_ones_count: ", train_class_counts[1])
                 print("val/class_zeros_count: ",
                       val_class_counts[0])
                 print("val/class_ones_count: ", val_class_counts[1])
 
                 # Calculate class weights
-                train_class_weights = 1. / \
+                train_class_weights = 100. / \
                     torch.tensor(train_class_counts, dtype=torch.float)
                 # # Map class labels to indices
                 # train_class_to_index = {
@@ -200,21 +200,12 @@ class IsbiDataModule(LightningDataModule):
                 )
 
                 # Calculate class weights
-                val_class_weights = 1. / \
+                val_class_weights = 100. / \
                     torch.tensor(val_class_counts, dtype=torch.float)
-
-                # Map class labels to indices
-                val_class_to_index = {
-                    self.class_name[i]: i for i in range(len(self.class_name))}
-                val_label_indices = [val_class_to_index[label]
-                                     for label in val_label_data]
-
-                # Assign weights to each sample in the validation set
-                val_weights = val_class_weights[val_label_indices]
 
                 # Assuming you have WeightedRandomSampler, you can use it like this:
                 self.weighted_sampler_val = WeightedRandomSampler(
-                    weights=val_weights.tolist(),
+                    weights=val_class_weights.tolist(),
                     num_samples=len(val_label_data),
                     replacement=False
                 )
