@@ -193,22 +193,22 @@ class IsbiDataModule(LightningDataModule):
                 # train_weights = train_class_weights[train_label_indices]
 
                 # Assuming you have WeightedRandomSampler, you can use it like this:
-                # self.weighted_sampler_train = WeightedRandomSampler(
-                #     weights=train_class_weights.tolist(),
-                #     num_samples=len(train_input_data),
-                #     replacement=False
-                # )
+                self.weighted_sampler_train = WeightedRandomSampler(
+                    weights=[0.8, 0.2],
+                    num_samples=len(train_label_data),
+                    replacement=False
+                )
 
                 # Calculate class weights
                 # val_class_weights = 1. / \
                 #     torch.tensor(val_class_counts, dtype=torch.float)
 
                 # Assuming you have WeightedRandomSampler, you can use it like this:
-                # self.weighted_sampler_val = WeightedRandomSampler(
-                #     weights=val_class_weights.tolist(),
-                #     num_samples=len(val_label_data),
-                #     replacement=False
-                # )
+                self.weighted_sampler_val = WeightedRandomSampler(
+                    weights=[0.8, 0.2],
+                    num_samples=len(val_label_data),
+                    replacement=False
+                )
 
                 self.data_train = IsbiDataSet(
                     train_input_data.tolist(), train_label_data.tolist(), self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
@@ -321,9 +321,9 @@ class IsbiDataModule(LightningDataModule):
                 batch_size=self.batch_size,
                 num_workers=self.hparams.num_workers,
                 pin_memory=self.hparams.pin_memory,
-                shuffle=True,
+                shuffle=False,
                 persistent_workers=True,
-                # sampler=self.weighted_sampler_train
+                sampler=self.weighted_sampler_train
             )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -337,9 +337,9 @@ class IsbiDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            shuffle=True,
+            shuffle=False,
             persistent_workers=True,
-            # sampler=self.weighted_sampler_val
+            sampler=self.weighted_sampler_val
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
