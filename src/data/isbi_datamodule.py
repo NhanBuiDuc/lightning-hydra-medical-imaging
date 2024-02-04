@@ -64,7 +64,7 @@ class IsbiDataModule(LightningDataModule):
         # ])
 
         trans = transforms.Compose(
-            [transforms.ToTensor(), transforms.Grayscale()])
+            [transforms.ToTensor(), transforms.Grayscale(num_output_channels=3)])
         trans1 = transforms.Compose([
             # transforms.RandomCrop(256),
             # transforms.RandomHorizontalFlip(),
