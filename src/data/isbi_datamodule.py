@@ -194,7 +194,8 @@ class IsbiDataModule(LightningDataModule):
 
                 # Assuming you have WeightedRandomSampler, you can use it like this:
                 self.weighted_sampler_train = WeightedRandomSampler(
-                    weights=[8, 2],
+                    weights=[(0.8*self.batch_size) // 100,
+                             (0.2*self.batch_size) // 100],
                     num_samples=len(train_label_data),
                     replacement=False
                 )
@@ -205,7 +206,8 @@ class IsbiDataModule(LightningDataModule):
 
                 # Assuming you have WeightedRandomSampler, you can use it like this:
                 self.weighted_sampler_val = WeightedRandomSampler(
-                    weights=[8, 2],
+                    weights=[(0.8*self.batch_size) // 100,
+                             (0.2*self.batch_size) // 100],
                     num_samples=len(val_label_data),
                     replacement=False
                 )
