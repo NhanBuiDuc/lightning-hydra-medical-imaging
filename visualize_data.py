@@ -30,7 +30,7 @@ trans3 = transforms.Compose([
     # transforms.RandomHorizontalFlip(0.5),
     # transforms.RandomVerticalFlip(0.5),
     transforms.ToTensor()])
-class_name = ["NGR", "GR"]
+class_name: ["NRG", "RG"]
 train_image_path = os.path.join(
     "./data/", "ISBI_2024/resize_512_images/")
 train_gt_path = os.path.join(
