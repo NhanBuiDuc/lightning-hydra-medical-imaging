@@ -63,7 +63,14 @@ class IsbiDataModule(LightningDataModule):
         #     transforms.Normalize((0.1307,), (0.3081,))
         # ])
 
-        trans = transforms.Compose([transforms.ToTensor(), ])
+        class RandomInvert(object):
+            def __call__(self, img):
+                if torch.rand(1) < 0.5:
+                    img = 1 - img  # Invert the image
+
+                return img
+
+        trans = transforms.Compose([transforms.ToTensor(), RandomInvert()])
         trans1 = transforms.Compose([
             # transforms.RandomCrop(256),
             # transforms.RandomHorizontalFlip(),
