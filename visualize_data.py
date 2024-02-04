@@ -149,7 +149,7 @@ class IsbiDataSet(Dataset):
             #     ])
             #     image = transform(image)
             # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
-            label = label[index]
+            label = self.label[index]
 
             # Create a one-hot encoded tensor
             if len(class_name) > 2:
