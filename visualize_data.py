@@ -168,6 +168,94 @@ class IsbiDataSet(Dataset):
             return None
 
 
+def crop_to_shape(arr, shape, cval=0):
+    """Crops a numpy array into the specified shape. If the array was larger, return centered crop. If it was smaller,
+    return a larger array with the original data in the center"""
+    if arr.ndim != len(shape):
+        raise Exception("Array and crop shape dimensions do not match")
+
+    arr_shape = np.array(arr.shape)
+    shape = np.array(shape)
+    max_shape = np.stack([arr_shape, shape]).max(axis=0)
+    output_arr = np.ones(max_shape, dtype=arr.dtype) * cval
+
+    arr_min = ((max_shape - arr_shape) / 2).astype(np.int)
+    arr_max = arr_min + arr_shape
+    slicer_obj = tuple(slice(idx_min, idx_max, 1)
+                       for idx_min, idx_max in zip(arr_min, arr_max))
+    output_arr[slicer_obj] = arr
+
+    crop_min = ((max_shape - shape) / 2).astype(np.int)
+    crop_max = crop_min + shape
+    slicer_obj = tuple(slice(idx_min, idx_max, 1)
+                       for idx_min, idx_max in zip(crop_min, crop_max))
+    # Return a copy of the view, so the rest of memory can be GC
+    return output_arr[slicer_obj].copy()
+
+
+def crop_retina(image):
+    """Return a square crop of the image centered on the retina.
+    This function does the following assumtions:
+    - image is an np.array with dimensions [height, weight, channels] or [height, weight]
+    - the background of the retinography will have a stark contrast with the rest of the image
+    """
+    # Check dimensionality of the array is valid
+    if image.ndim > 3:
+        raise Exception("image has too many dimensions. Max 3")
+    elif image.ndim < 2:
+        raise Exception("image has too few dimensions. Min 2")
+
+    # Rescale image to ensure there will be a black border around (even if the original was already cropped)
+    image = crop_to_shape(
+        image,
+        np.array(image.shape) + np.array([20, 20, 0])[:image.ndim],
+        cval=0
+    )
+
+    # If image is an RGB array, convert to grayscale
+    if image.ndim == 3:
+        bw_image = np.mean(image, axis=-1)
+    else:
+        bw_image = image
+
+    # Find and apply threshold, to create a binary mask
+    thresh = filters.threshold_triangle(bw_image)
+    binary = bw_image > thresh
+
+    # Label image regions and select the largest one (the retina)
+    label_image = measure.label(binary)
+    eye_region = sorted(measure.regionprops(
+        label_image), key=lambda p: -p.area)[0]
+
+    # Crop around the retina
+    y_start, x_start, y_end, x_end = eye_region.bbox
+    y_diff = y_end - y_start
+    x_diff = x_end - x_start
+    if x_diff > y_diff:
+        if (y_start + x_diff) <= binary.shape[0]:
+            y_end_x_diff = (y_start + x_diff)
+            cropped_image = image[y_start:y_end_x_diff, x_start:x_end]
+        else:
+            y_start_x_diff = (y_end - x_diff) if (y_end - x_diff) > 0 else 0
+            cropped_image = image[y_start_x_diff:y_end, x_start:x_end]
+    else:
+        if (x_start + y_diff) <= binary.shape[1]:
+            x_end_y_diff = (x_start + y_diff)
+            cropped_image = image[y_start:y_end, x_start:x_end_y_diff]
+        else:
+            x_start_y_diff = (x_end - y_diff) if (x_end - y_diff) > 0 else 0
+            cropped_image = image[y_start:y_end, x_start_y_diff:x_end]
+
+    # Ensure aspect ratio will be square
+    max_axis = max(cropped_image.shape)
+    if cropped_image.ndim == 3:
+        square_crop = (max_axis, max_axis, cropped_image.shape[-1])
+    else:
+        square_crop = (max_axis, max_axis)
+    square_image = crop_to_shape(cropped_image, square_crop)
+    return square_image
+
+
 data_train = IsbiDataSet(
     train_input_data.tolist(), train_label_data.tolist(), class_name, len(train_input_data), "./data/", train_image_path, True, trans, is_training=True, image_size=512)
 
@@ -185,7 +273,7 @@ def visualize_images(dataset, label_value=1, num_images=5):
         else:
             # Convert tensor to PIL Image for visualization
             image = TF.to_pil_image(image)
-
+            image = crop_retina(np.array(image))
             plt.imshow(image)
             plt.show()
 
