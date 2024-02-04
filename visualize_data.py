@@ -99,7 +99,7 @@ class IsbiDataSet(Dataset):
         try:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
-                self.data_dir,  train_image_path, self.data[index] + ".jpg")
+                self.data_dir,  self.train_image_path, self.data[index] + ".jpg")
             # Replacing backslashes with forward slashes
             image_path = image_path.replace("\\", "/")
             image = Image.open(image_path).convert('RGB')  # Adjust as needed
@@ -108,7 +108,7 @@ class IsbiDataSet(Dataset):
             try:
                 # If the file with .jpg extension is not found, try to open the image with .png extension
                 image_path = os.path.join(
-                    self.data_dir,  train_image_path, self.data[index] + ".png")
+                    self.data_dir,  self.train_image_path, self.data[index] + ".png")
                 # Replacing backslashes with forward slashes
                 image_path = image_path.replace("\\", "/")
                 image = Image.open(image_path).convert(
@@ -118,7 +118,7 @@ class IsbiDataSet(Dataset):
                 try:
                     # If the file with .jpg extension is not found, try to open the image with .png extension
                     image_path = os.path.join(
-                        self.data_dir,  train_image_path, self.data[index] + ".jpeg")
+                        self.data_dir,  self.train_image_path, self.data[index] + ".jpeg")
                     # Replacing backslashes with forward slashes
                     image_path = image_path.replace("\\", "/")
                     image = Image.open(image_path).convert(
