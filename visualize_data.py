@@ -1,3 +1,5 @@
+import torchvision.transforms.functional as TF
+import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import torch
 from lightning import LightningDataModule
@@ -13,6 +15,8 @@ from sklearn.utils.class_weight import compute_class_weight
 
 trans = transforms.Compose(
     [transforms.ToTensor(), transforms.Grayscale(num_output_channels=3)])
+trans = transforms.Compose(
+    [transforms.ToTensor(), transforms.CenterCrop((512, 512))])
 trans1 = transforms.Compose([
     # transforms.RandomCrop(256),
     # transforms.RandomHorizontalFlip(),
@@ -172,25 +176,19 @@ data_val = IsbiDataSet(
 
 
 def visualize_images(dataset, label_value=1, num_images=5):
-    # Filter indices of images with the specified label
-    indices_label_1 = [i for i, (_, label) in enumerate(
-        dataset) if torch.argmax(label) == label_value]
 
-    # Randomly select a subset of indices if there are more than num_images
-    selected_indices = np.random.choice(indices_label_1, min(
-        num_images, len(indices_label_1)), replace=False)
+    for index, data in enumerate(dataset):
+        image = data[0]
+        label = data[1]
+        if label != label_value:
+            continue
+        else:
+            # Convert tensor to PIL Image for visualization
+            image = TF.to_pil_image(image)
 
-    # Plot the images
-    fig, axes = plt.subplots(1, num_images, figsize=(15, 3))
-
-    for i, index in enumerate(selected_indices):
-        image, label = dataset[index]
-        axes[i].imshow(image.permute(1, 2, 0))
-        axes[i].axis('off')
-        axes[i].set_title(f'Index: {index}, Label: {label_value}')
-
-    plt.show()
+            plt.imshow(image)
+            plt.show()
 
 
 # Assuming 'data_train' is an instance of IsbiDataSet
-visualize_images(data_train, label_value=1, num_images=5)
+visualize_images(data_train, label_value=1, num_images=2000)
