@@ -12,6 +12,7 @@ import numpy as np
 from PIL import Image
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.utils.class_weight import compute_class_weight
+from skimage import filters, segmentation, measure
 
 trans = transforms.Compose(
     [transforms.ToTensor(), transforms.Grayscale(num_output_channels=3)])
@@ -179,13 +180,13 @@ def crop_to_shape(arr, shape, cval=0):
     max_shape = np.stack([arr_shape, shape]).max(axis=0)
     output_arr = np.ones(max_shape, dtype=arr.dtype) * cval
 
-    arr_min = ((max_shape - arr_shape) / 2).astype(np.int)
+    arr_min = ((max_shape - arr_shape) / 2).astype(np.int32)
     arr_max = arr_min + arr_shape
     slicer_obj = tuple(slice(idx_min, idx_max, 1)
                        for idx_min, idx_max in zip(arr_min, arr_max))
     output_arr[slicer_obj] = arr
 
-    crop_min = ((max_shape - shape) / 2).astype(np.int)
+    crop_min = ((max_shape - shape) / 2).astype(np.int32)
     crop_max = crop_min + shape
     slicer_obj = tuple(slice(idx_min, idx_max, 1)
                        for idx_min, idx_max in zip(crop_min, crop_max))
