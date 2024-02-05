@@ -154,3 +154,5 @@ configs/local/default.yaml
 .aim
 
 /data/ISBI_2024/*
+/data/ISBI_2024/color_aug_images/*
+/data/ISBI_2024/geo_aug_images/*
