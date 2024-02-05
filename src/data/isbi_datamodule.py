@@ -223,10 +223,10 @@ class IsbiDataModule(LightningDataModule):
                 )
 
                 self.data_train = IsbiDataSet(
-                    train_input_data.tolist(), train_label_data.tolist(), self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
+                    combined_train_data, combined_label_data, self.class_name, len(combined_train_data), self.data_dir, self.train_image_path, self.is_transform, self.train_transforms, self.val_transforms, is_training=True, image_size=self.image_size)
 
                 self.data_val = IsbiDataSet(
-                    val_input_data.tolist(), val_label_data.tolist(), self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=False, image_size=self.image_size)
+                    val_input_data.tolist(), val_label_data.tolist(), self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.train_transforms, self.val_transforms, is_training=False, image_size=self.image_size)
             else:
                 if self.balance_data:
                     input_data = self.train_gt_pdf['Eye ID']
@@ -538,19 +538,28 @@ class IsbiDataSet(Dataset):
     def __getitem__(self, index):
         # Load image using self.df['image'][index], assuming 'image' is the column containing image paths
         image = None
-        try:
+        image_name = self.data[index]
+        # Check if the image name ends with specific strings
+        if image_name.endswith("_color_aug"):
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
-                self.data_dir,  self.train_image_path, self.data[index] + ".jpg")
+                self.data_dir,  "color_aug_images", self.data[index] + ".jpg")
             # Replacing backslashes with forward slashes
             image_path = image_path.replace("\\", "/")
             image = Image.open(image_path).convert('RGB')  # Adjust as needed
 
-        except FileNotFoundError:
+        elif image_name.endswith("_horizontal_flip_image") or image_name.endswith("_vertical_flip_image") or image_name.endswith("_rotated_image"):
+            # Attempt to open the image with .jpg extension
+            image_path = os.path.join(
+                self.data_dir,  "geo_aug_images", self.data[index] + ".jpg")
+            # Replacing backslashes with forward slashes
+            image_path = image_path.replace("\\", "/")
+            image = Image.open(image_path).convert('RGB')  # Adjust as needed
+        else:
             try:
-                # If the file with .jpg extension is not found, try to open the image with .png extension
+                # Attempt to open the image with .jpg extension
                 image_path = os.path.join(
-                    self.data_dir,  self.train_image_path, self.data[index] + ".png")
+                    self.data_dir,  self.train_image_path, self.data[index] + ".jpg")
                 # Replacing backslashes with forward slashes
                 image_path = image_path.replace("\\", "/")
                 image = Image.open(image_path).convert(
@@ -560,16 +569,26 @@ class IsbiDataSet(Dataset):
                 try:
                     # If the file with .jpg extension is not found, try to open the image with .png extension
                     image_path = os.path.join(
-                        self.data_dir,  self.train_image_path, self.data[index] + ".jpeg")
+                        self.data_dir,  self.train_image_path, self.data[index] + ".png")
                     # Replacing backslashes with forward slashes
                     image_path = image_path.replace("\\", "/")
                     image = Image.open(image_path).convert(
                         'RGB')  # Adjust as needed
 
                 except FileNotFoundError:
-                    # Handle the case where both .jpg and .png files are not found
-                    print(f"Error: File not found for index {index}")
-                    # You might want to return a placeholder image or raise an exception as needed
+                    try:
+                        # If the file with .jpg extension is not found, try to open the image with .png extension
+                        image_path = os.path.join(
+                            self.data_dir,  self.train_image_path, self.data[index] + ".jpeg")
+                        # Replacing backslashes with forward slashes
+                        image_path = image_path.replace("\\", "/")
+                        image = Image.open(image_path).convert(
+                            'RGB')  # Adjust as needed
+
+                    except FileNotFoundError:
+                        # Handle the case where both .jpg and .png files are not found
+                        print(f"Error: File not found for index {index}")
+                        # You might want to return a placeholder image or raise an exception as needed
 
         # Apply transformations if specified
         if image is not None:
