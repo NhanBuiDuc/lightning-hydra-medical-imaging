@@ -38,7 +38,25 @@ for idx, (image_name, label) in enumerate(zip(input_data, labels_numeric)):
     if label == 1:  # Check if the label is "RG"
         # Assuming images have .jpg extension
         input_path = os.path.join(train_image_path, f"{image_name}.jpg")
-
+        try:
+            # Open the original image
+            original_image = Image.open(input_path)
+        except FileNotFoundError:
+            try:
+                # Try opening with .png extension
+                input_path = os.path.join(
+                    train_image_path, f"{image_name}.png")
+                original_image = Image.open(input_path)
+            except FileNotFoundError:
+                try:
+                    # Try opening with .jpeg extension
+                    input_path = os.path.join(
+                        train_image_path, f"{image_name}.jpeg")
+                    original_image = Image.open(input_path)
+                except FileNotFoundError:
+                    # Handle the case when the image file is not found
+                    print(f"Image file for {image_name} not found.")
+                    continue  # Skip to the next iteration or add your desired logic
         # Open the original image
         original_image = Image.open(input_path)
 
