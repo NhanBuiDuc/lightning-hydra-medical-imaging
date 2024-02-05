@@ -313,11 +313,6 @@ class IsbiDataModule(LightningDataModule):
                     # Assuming label_data is all 1 for the length of the new images
                     combined_label_data = original_train_label_data + \
                         [1] * (len(geo_images) + len(color_images))
-                    combined_train_data = geo_images + color_images
-
-                    # Assuming label_data is all 1 for the length of the new images
-                    combined_label_data = [1] * \
-                        (len(geo_images) + len(color_images))
 
                     print("augmented_train/class_ones_count: ",
                           train_class_counts[1] + len(geo_images) + len(color_images))
@@ -548,7 +543,7 @@ class IsbiDataSet(Dataset):
         if ("color_aug") in self.data[index]:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
-                self.data_dir,  "color_aug_images", self.data[index] + ".jpg")
+                self.data_dir,  "color_aug_images", image_name)
             # Replacing backslashes with forward slashes
             image_path = image_path.replace("\\", "/")
             image = Image.open(image_path).convert('RGB')  # Adjust as needed
@@ -556,7 +551,7 @@ class IsbiDataSet(Dataset):
         elif "horizontal_flip_image" in image_name or "vertical_flip_image" in image_name or "rotated_image" in image_name:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
-                self.data_dir,  "geo_aug_images", image_name + ".jpg")
+                self.data_dir,  "geo_aug_images", image_name)
             # Replacing backslashes with forward slashes
             image_path = image_path.replace("\\", "/")
             image = Image.open(image_path).convert('RGB')  # Adjust as needed
