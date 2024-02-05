@@ -79,11 +79,11 @@ for idx, (image_name, label) in enumerate(zip(input_data, labels_numeric)):
         os.makedirs(output_directory, exist_ok=True)
 
         rotation_image.save(os.path.join(
-            output_directory, "rotated_image.jpg"))
+            output_directory, f"{image_name}_rotated_image.jpg"))
         horizontal_flip_image.save(os.path.join(
-            output_directory, "horizontal_flip_image.jpg"))
+            output_directory, f"{image_name}_horizontal_flip_image.jpg"))
         vertical_flip_image.save(os.path.join(
-            output_directory, "vertical_flip_image.jpg"))
+            output_directory, f"{image_name}_vertical_flip_image.jpg"))
         # Color Augmentation: Hue = 0.5, Saturation = 0.5
         color_transforms = transforms.Compose([
             transforms.ColorJitter(hue=0.5, saturation=0.5)
