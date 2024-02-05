@@ -63,8 +63,12 @@ class IsbiDataModule(LightningDataModule):
         #     transforms.Normalize((0.1307,), (0.3081,))
         # ])
 
-        trans = transforms.Compose(
-            [transforms.ToTensor(), transforms.ColorJitter(brightness=0.0, contrast=0.0, saturation=0.0, hue=0.5)])
+        train_trans = transforms.Compose(
+            [transforms.ToTensor(), transforms.ColorJitter(brightness=0.0, contrast=0.0, saturation=0.5, hue=0.5),
+             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+        val_trans = transforms.Compose(
+            [transforms.ToTensor(), transforms.ColorJitter(brightness=0.0, contrast=0.0, saturation=0.5, hue=0.5),
+             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
         trans1 = transforms.Compose([
             # transforms.RandomCrop(256),
             # transforms.RandomHorizontalFlip(),
@@ -83,8 +87,8 @@ class IsbiDataModule(LightningDataModule):
             # transforms.RandomVerticalFlip(0.5),
             transforms.ToTensor()])
 
-        self.transforms = trans
-
+        self.train_transforms = train_trans
+        self.val_transforms = val_trans
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
@@ -107,6 +111,11 @@ class IsbiDataModule(LightningDataModule):
             self.data_dir, "ISBI_2024/resize_512_images/")
         self.train_gt_path = os.path.join(
             self.data_dir, "ISBI_2024", "JustRAIGS_Train_labels.csv")
+        self.geo_aug_images = os.path.join(
+            self.data_dir, "ISBI_2024", "geo_aug_images")
+        self.color_aug_images = os.path.join(
+            self.data_dir, "ISBI_2024", "color_aug_images")
+
         self.train_gt_path = self.train_gt_path.replace("\\", "/")
 
         self.binary_unbalance_train_ratio = binary_unbalance_train_ratio
@@ -231,78 +240,88 @@ class IsbiDataModule(LightningDataModule):
                                       for label in labels]
                     labels_numeric = np.array(labels_numeric)
                     # Choose fold to train on
-                    kf = StratifiedKFold(n_splits=5,
-                                         shuffle=True, random_state=self.kfold_seed)
+                    kf = KFold(n_splits=5,
+                               shuffle=True, random_state=self.kfold_seed)
+
                     all_splits = [k for k in kf.split(
                         input_data, labels_numeric)]
 
                     train_indexes, val_indexes = all_splits[self.kfold_index]
 
                     # Count the number of samples in class 1 in the training set
-                    train_count_class_1 = (
-                        labels.iloc[train_indexes] == 'RG').sum()
-                    # train_count_class_0 = (
-                    #     labels.iloc[train_indexes] == 'NRG').sum()
-                    # val_count_class_1 = (
-                    #     labels.iloc[val_indexes] == 'RG').sum()
-                    # val_count_class_0 = (
-                    #     labels.iloc[val_indexes] == 'NRG').sum()
-                    # Remove samples of class 0 until it equals the count of class 1
-                    train_class_0_indexes = train_indexes[labels.iloc[train_indexes] == "NRG"]
-                    train_class_1_indexes = train_indexes[labels.iloc[train_indexes] == "RG"]
+                    train_input_data = input_data[train_indexes]
+                    train_label_data = labels_numeric[train_indexes]
 
-                    np.random.shuffle(train_class_0_indexes)
-                    index = int(train_count_class_1 *
-                                (self.binary_unbalance_train_ratio / 100))
-                    class_0_indexes_to_keep = train_class_0_indexes[:index]
+                    val_input_data = input_data[val_indexes]
+                    val_label_data = labels_numeric[val_indexes]
 
-                    # Combine class 1 indexes with selected class 0 indexes
-                    # Merge class_1_indexes and class_0_indexes_to_keep
-                    merged_indexes = np.concatenate(
-                        [train_class_1_indexes, class_0_indexes_to_keep])
+                    train_class_counts = np.bincount(train_label_data)
+                    val_class_counts = np.bincount(val_label_data)
 
-                    # Shuffle the merged indexes
-                    np.random.shuffle(merged_indexes)
+                    print("original_train/class_zeros_count: ",
+                          train_class_counts[0])
+                    print("original_train/class_ones_count: ",
+                          train_class_counts[1])
+                    print("original_val/class_zeros_count: ",
+                          val_class_counts[0])
+                    print("original_val/class_ones_count: ",
+                          val_class_counts[1])
 
-                    train_input_data = input_data[merged_indexes].tolist()
-                    train_label_data = labels_numeric[merged_indexes].tolist()
+                    # # Calculate class weights
+                    # train_class_weights = 1. / \
+                    #     torch.tensor(train_class_counts, dtype=torch.float)
+                    # # Map class labels to indices
+                    # train_class_to_index = {
+                    #     self.class_name[i]: i for i in range(len(self.class_name))}
 
-                    val_input_data = input_data[val_indexes].tolist()
-                    val_label_data = labels_numeric[val_indexes].tolist()
-                    # Transform labels into numerical format (0 or 1)
-                    val_class_distribution = {
-                        item: 0 for item in self.class_name}
+                    # train_label_indices = [train_class_to_index[label]
+                    #                        for label in train_label_data]
 
-                    for item in val_label_data:
-                        val_class_distribution[item] += 1
-                    # Convert class_distribution to a list of counts in the order of class_name
-                    val_class_counts = [val_class_distribution[self.class_name[i]]
-                                        for i in range(len(self.class_name))]
+                    # # Assign weights to each sample in the validation set
+                    # train_weights = train_class_weights[train_label_indices]
+
+                    # Assuming you have WeightedRandomSampler, you can use it like this:
+                    self.weighted_sampler_train = WeightedRandomSampler(
+                        weights=[(0.8*self.batch_size) // 100,
+                                 (0.2*self.batch_size) // 100],
+                        num_samples=len(train_label_data),
+                        replacement=False
+                    )
 
                     # Calculate class weights
-                    val_class_weights = 1. / \
-                        torch.tensor(val_class_counts, dtype=torch.float)
-
-                    # Map class labels to indices
-                    val_class_to_index = {
-                        self.class_name[i]: i for i in range(len(self.class_name))}
-                    val_label_indices = [val_class_to_index[label]
-                                         for label in val_label_data]
-
-                    # Assign weights to each sample in the validation set
-                    val_weights = val_class_weights[val_label_indices]
+                    # val_class_weights = 1. / \
+                    #     torch.tensor(val_class_counts, dtype=torch.float)
 
                     # Assuming you have WeightedRandomSampler, you can use it like this:
                     self.weighted_sampler_val = WeightedRandomSampler(
-                        weights=val_weights.tolist(),
+                        weights=[(0.8*self.batch_size) // 100,
+                                 (0.2*self.batch_size) // 100],
                         num_samples=len(val_label_data),
                         replacement=False
                     )
+                    original_train_input_data = train_input_data.tolist()
+                    original_train_label_data = train_label_data.tolist()
+
+                    geo_images = [f for f in os.listdir(
+                        self.geo_aug_images) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+
+                    color_images = [f for f in os.listdir(
+                        self.color_aug_images) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+
+                    combined_train_data = original_train_input_data + geo_images + color_images
+
+                    # Assuming label_data is all 1 for the length of the new images
+                    combined_label_data = original_train_label_data + \
+                        [1] * (len(geo_images) + len(color_images))
+
+                    print("augmented_train/class_ones_count: ",
+                          train_class_counts[1] + len(geo_images) + len(color_images))
+
                     self.data_train = IsbiDataSet(
-                        train_input_data, train_label_data, self.class_name, len(train_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=True, image_size=self.image_size)
+                        combined_train_data, combined_label_data, self.class_name, len(combined_train_data), self.data_dir, self.train_image_path, self.is_transform, self.train_transforms, self.val_transforms, is_training=True, image_size=self.image_size)
 
                     self.data_val = IsbiDataSet(
-                        val_input_data, val_label_data, self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.transforms, is_training=False, image_size=self.image_size)
+                        val_input_data.tolist(), val_label_data.tolist(), self.class_name, len(val_input_data), self.data_dir, self.train_image_path, self.is_transform, self.train_transforms, self.val_transforms, is_training=False, image_size=self.image_size)
 
     def train_dataloader(self) -> DataLoader[Any]:
         """Create and return the train dataloader.
@@ -499,7 +518,7 @@ class IsbiDataModule(LightningDataModule):
 
 
 class IsbiDataSet(Dataset):
-    def __init__(self, data, label, class_name, data_length, data_dir, train_image_path, is_transform, transform, is_training, image_size):
+    def __init__(self, data, label, class_name, data_length, data_dir, train_image_path, is_transform, train_transforms, val_transforms, is_training, image_size):
         super().__init__()
         self.data = data
         self.label = label
@@ -508,7 +527,8 @@ class IsbiDataSet(Dataset):
         self.data_length = data_length
         self.data_dir = data_dir
         self.is_transform = is_transform
-        self.transform = transform
+        self.train_transforms = train_transforms
+        self.val_transforms = val_transforms
         self.is_training = is_training
         self.image_size = image_size
 
@@ -554,23 +574,19 @@ class IsbiDataSet(Dataset):
         # Apply transformations if specified
         if image is not None:
             if self.is_transform:
-                image = self.transform(image)
-
+                if self.is_training:
+                    image = self.train_transforms(image)
+                else:
+                    image = self.val_transforms(image)
             else:
                 self.transforms = transforms.Compose([
                     transforms.Resize((self.image_size, self.image_size)),
                     transforms.ToTensor(),
-                    transforms.Normalize((0.1307,), (0.3081,))
+                    transforms.Normalize(
+                        (0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
                 ])
                 image = self.transform(image)
-            # else:
-            #     self.transforms = transforms.Compose([
-            #         transforms.Resize((self.image_size, self.image_size)),
-            #         transforms.ToTensor(),
-            #         transforms.Normalize((0.1307,), (0.3081,))
-            #     ])
-            #     image = self.transform(image)
-            # Extract class labels, assuming 'MEL', 'NV', etc., are columns in your CSV file
+
             label = self.label[index]
 
             # Create a one-hot encoded tensor
