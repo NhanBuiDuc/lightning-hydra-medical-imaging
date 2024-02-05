@@ -17,7 +17,7 @@ from skimage import filters, segmentation, measure
 trans = transforms.Compose(
     [transforms.ToTensor(), transforms.Grayscale(num_output_channels=3)])
 trans = transforms.Compose(
-    [transforms.ToTensor(), transforms.CenterCrop((512, 512))])
+    [transforms.ToTensor(), transforms.CenterCrop((512, 512)), transforms.ColorJitter(brightness=0.0, contrast=0.5, saturation=1, hue=0.5)])
 trans1 = transforms.Compose([
     # transforms.RandomCrop(256),
     # transforms.RandomHorizontalFlip(),
