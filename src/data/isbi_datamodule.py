@@ -543,7 +543,7 @@ class IsbiDataSet(Dataset):
         if ("color_aug") in self.data[index]:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
-                self.data_dir,  "color_aug_images", image_name)
+                self.data_dir,  "ISBI_2024", "color_aug_images", image_name)
             # Replacing backslashes with forward slashes
             image_path = image_path.replace("\\", "/")
             image = Image.open(image_path).convert('RGB')  # Adjust as needed
@@ -551,7 +551,7 @@ class IsbiDataSet(Dataset):
         elif "horizontal_flip_image" in image_name or "vertical_flip_image" in image_name or "rotated_image" in image_name:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
-                self.data_dir,  "geo_aug_images", image_name)
+                self.data_dir, "ISBI_2024",  "geo_aug_images", image_name)
             # Replacing backslashes with forward slashes
             image_path = image_path.replace("\\", "/")
             image = Image.open(image_path).convert('RGB')  # Adjust as needed
