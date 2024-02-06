@@ -540,7 +540,7 @@ class IsbiDataSet(Dataset):
         image = None
         image_name = self.data[index]
         # Check if the image name ends with specific strings
-        if ("color_aug") in self.data[index]:
+        if ("color") in self.data[index]:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
                 self.data_dir,  "ISBI_2024", "color_aug_images", image_name)
@@ -548,7 +548,7 @@ class IsbiDataSet(Dataset):
             image_path = image_path.replace("\\", "/")
             image = Image.open(image_path).convert('RGB')  # Adjust as needed
 
-        elif "horizontal_flip_image" in image_name or "vertical_flip_image" in image_name or "rotated_image" in image_name:
+        elif "geo" in image_name:
             # Attempt to open the image with .jpg extension
             image_path = os.path.join(
                 self.data_dir, "ISBI_2024",  "geo_aug_images", image_name)
